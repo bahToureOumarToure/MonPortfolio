@@ -7,7 +7,9 @@ if (!self.define) {
       new Promise((e) => {
         if ("document" in self) {
           const s = document.createElement("script");
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           ((s.src = a), (s.onload = e), document.head.appendChild(s));
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         } else ((s = a), importScripts(a), e());
       }).then(() => {
         let s = e[a];
@@ -29,21 +31,22 @@ if (!self.define) {
 }
 define(["./workbox-f1770938"], function (s) {
   "use strict";
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
   (importScripts(),
     self.skipWaiting(),
     s.clientsClaim(),
     s.precacheAndRoute(
       [
         {
-          url: "/Pwa-logos/Logo-v1-black-file-icon.png",
+          url: "/Pwa-logos/logo.png",
           revision: "8d27187ec7739a904b5f5e901f2d5ef5",
         },
         {
-          url: "/Pwa-logos/Logo-v1-black-mini.png",
+          url: "/Pwa-logos/logo.png",
           revision: "f6ec5c8bf370f9dc9670aaa84e8b3239",
         },
         {
-          url: "/Pwa-logos/Logo-v1-black.png",
+          url: "/Pwa-logos/logo.png",
           revision: "1effdf416529d92ba023f1b756472339",
         },
         {
@@ -59,7 +62,7 @@ define(["./workbox-f1770938"], function (s) {
           revision: "c59465cf2964b15728e3c3de30251bfa",
         },
         {
-          url: "/Pwa-logos/icon512_maskable.png",
+          url: "/Pwa-logos/logo.png.png",
           revision: "fa47d778fe38081ad5488de670764414",
         },
         {
