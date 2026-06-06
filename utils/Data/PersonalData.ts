@@ -1,0 +1,27 @@
+export const personalData = {
+    name: "< Bah Omar Bah />",
+    profile: "/img.jpg",
+    designation: "Full-Stack Web/Mobile & AI/Data and Designer",
+    designationAlternateWords: [
+        "Developer.",
+        "DevOps.",
+        "Engineer.",
+        "Blogger.",
+        "Innovator.",
+        "Designer.",
+    ],
+    description:
+        "Junior Web & Mobile Developer,DevOps, Designer, and Blogger. I combine code, AI, and content creation to build strong brand identities and high-performance digital experiences.",
+    email: "o.t.bahtoure@gmail.com",
+    phone: "+212 7 05 10 76 86",
+    address: "Berkane/Maroc",
+    github: "https://github.com/bahToureOumarToure",
+    facebook: "https://www.facebook.com/share/1EH283sJGJ/",
+    Instagram: "https://www.instagram.com/otbtoure?igsh=dmR2emhhNGZ0Ynlm",
+    linkedIn: "https://www.linkedin.com/in/bahoumartoure",
+    twitter: "https://twitter.com",
+    stackOverflow: "https://stackexchange.com/users/31998031/bah-tour%c3%a9-oumar-toure",
+    devUsername: "Toure Dev",
+    leetcode: "https://leetcode.com",
+    resume: "https://drive.google.com/file/d/1n8PTGzNBvFG3cxgWXIxvEnZdL8Mag__w/view?usp=sharing",
+};
