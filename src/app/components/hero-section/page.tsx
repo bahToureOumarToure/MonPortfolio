@@ -129,7 +129,7 @@ const HeroSection = () => {
             <p className="hero-heading text-lg md:text-xl text-slate-400 max-w-xl leading-relaxed font-medium">
               I'm{" "}
               <span className="text-white font-bold">{personalData.name}</span>,
-              a professional
+              Software
               <span
                 className="text-red-500 ml-2 font-bold inline-block min-w-[200px]"
                 ref={designationRef}
@@ -256,7 +256,9 @@ const HeroSection = () => {
                     <span className="ml-4">
                       <span className="text-slate-300">role</span>
                       <span className="text-slate-400">:</span>{" "}
-                      <span className="text-red-300">'Junior IT Engineer'</span>
+                      <span className="text-red-300">
+                        'Junior Software Engineer'
+                      </span>
                       ,
                     </span>
                   </span>
@@ -323,8 +325,10 @@ const HeroSection = () => {
                     <span className="text-slate-600 italic shrink-0">10</span>
                     <span className="ml-4">
                       <span className="text-slate-200">workMode:</span> [
-                      <span className="text-red-300">'Local (Oujda)'</span>,{" "}
-                      <span className="text-red-300">'Remote'</span>],
+                      <span className="text-red-300">
+                        'Local (Berkane/Oujda)'
+                      </span>
+                      , <span className="text-red-300">'Remote'</span>],
                     </span>
                   </span>
 

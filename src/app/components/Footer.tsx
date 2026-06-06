@@ -118,10 +118,7 @@ const Footer = () => (
           &copy; {new Date().getFullYear()} Bah Oumar Touré . All rights
           reserved.
         </p>
-        <p className="flex items-center gap-2">
-          Made with <span className="text-red-600 animate-pulse">❤️</span> in
-          Morocco
-        </p>
+        <p className="flex items-center gap-2">Morocco</p>
       </div>
     </div>
   </footer>

@@ -11,7 +11,7 @@ export const personalData = {
     "Designer.",
   ],
   description:
-    "Junior Web & Mobile Developer,DevOps, Designer, and Blogger. I combine code, AI, and content creation to build strong brand identities and high-performance digital experiences.",
+    "Junior Web & Mobile Developer, DevOps, Designer, and Blogger. I combine code, AI, and content creation to build strong brand identities and high-performance digital experiences.",
   email: "o.t.bahtoure@gmail.com",
   phone: "+212 7 05 10 76 86",
   address: "Berkane/Maroc",
