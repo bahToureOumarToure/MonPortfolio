@@ -90,7 +90,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Bah Oumar Touré | Junior Developer - IA, Data, DevOps & Full-Stack",
     description:
-      "Étudiant ingénieur ENIAD Berkane - IA & Deep Learning (LSTM, NLP), Data & BI (Power BI), DevOps, Full-Stack (Spring Boot, Next.js, Flutter). Disponible pour Stage PFA.",
+      "Étudiant ingénieur ENIAD Berkane - Full-Stack ,DevOps, IA , Data,  Disponible pour Stage PFA.",
     url: SITE_URL,
     siteName: "Bah Oumar Touré Portfolio",
     images: [
@@ -107,9 +107,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bah Oumar Touré | Junior Developer - IA, Data, DevOps & Full-Stack",
+    title: "Bah Oumar Touré | Junior Developer - Full-Stack, IA",
     description:
-      "Étudiant ingénieur ENIAD - Deep Learning, Power BI, DevOps, Full-Stack. Disponible Stage PFA Été 2026.",
+      "Étudiant ingénieur à ENIAD - Full-Stack, DevOps. Disponible Stage PFA Été 2026.",
     images: ["/Website-overview.png"],
     creator: "@bahoumartoure",
   },
@@ -141,9 +141,9 @@ const jsonLd = {
   image: `${SITE_URL}/profile.png`,
   email: "mailto:bahoumartoure70@gmail.com",
   jobTitle:
-    "Étudiant Ingénieur en Génie Informatique - Junior Developer IA, Data, DevOps & Full-Stack",
+    "Étudiant Ingénieur en Génie Informatique - Junior Developer Full-Stack, Data, DevOps & IA",
   description:
-    "Étudiant en 2e année du cycle d'ingénieur en Génie Informatique à l'ENIAD Berkane, spécialisé en Intelligence Artificielle, Data, DevOps et développement Full-Stack. Conception de modèles Deep Learning (LSTM, Seq2Seq), architectures microservices Spring Boot, dashboards Power BI et applications Next.js / Flutter. À la recherche d'un Stage de Fin d'Année (PFA).",
+    "Étudiant en 2e année du cycle d'ingénieur en Génie Informatique à l'ENIAD Berkane, développement Full-StackDevOps , architectures microservices Spring Boot, Intelligence Artificielle, Data,. À la recherche d'un Stage de Fin d'Année (PFA).",
   alumniOf: [
     {
       "@type": "EducationalOrganization",
