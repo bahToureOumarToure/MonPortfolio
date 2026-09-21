@@ -6,7 +6,7 @@ Personal developer portfolio built with **Next.js 15**, **React 19**, **Tailwind
 
 ## Live Demo
 
-[https://bah-oumar-toure.vercel.app](https://bah-oumar-toure.vercel.app)
+[https://mon-portfolio-rho-liard.vercel.app](https://mon-portfolio-rho-liard.vercel.app)
 
 ---
 
@@ -89,7 +89,7 @@ Then visit: [http://localhost:3000](http://localhost:3000)
 
 ## Deployment
 
-The project is deployed on [Vercel](https://vercel.com). Any push to `master` triggers an automatic production deployment.
+The project is deployed on [Vercel](https://vercel.com). Any push to `main` triggers an automatic production deployment.
 
 ---
 

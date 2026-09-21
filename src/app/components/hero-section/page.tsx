@@ -246,7 +246,7 @@ const HeroSection = () => {
                     <span className="ml-4">
                       <span className="text-slate-300">name</span>
                       <span className="text-slate-400">:</span>{" "}
-                      <span className="text-red-300">'Bah Omar Touré'</span>,
+                      <span className="text-red-300">'Bah Oumar Touré'</span>,
                     </span>
                   </span>
 

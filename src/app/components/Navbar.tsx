@@ -89,7 +89,7 @@ const Navbar = () => {
         >
           <Image
             src={img}
-            alt="Bah Omar Touré"
+            alt="Bah Oumar Touré"
             width={isScrolled ? 50 : 60}
             height={isScrolled ? 50 : 60}
             className="transition-all duration-500"
