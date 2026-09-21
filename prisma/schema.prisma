@@ -1,0 +1,293 @@
+// Prisma schema — Portfolio dynamique + CMS admin
+// Datasource: Vercel Postgres (Neon). Pooled URL for the app, direct URL for migrations.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// =====================================================================
+// Médias (bibliothèque centrale) — images & documents (CV) sur Vercel Blob.
+// Au seed initial, les lignes pointent vers les fichiers /public existants.
+// =====================================================================
+enum MediaKind {
+  IMAGE
+  DOCUMENT
+}
+
+model Media {
+  id        String    @id @default(cuid())
+  url       String // URL publique (Blob) ou chemin /public au seed
+  pathname  String? // pathname Blob (pour suppression)
+  filename  String
+  mimeType  String
+  size      Int       @default(0)
+  width     Int?
+  height    Int?
+  alt       String?
+  kind      MediaKind @default(IMAGE)
+  createdAt DateTime  @default(now())
+
+  // Relations inverses
+  heroImages     Hero[]         @relation("HeroImage")
+  profileImages  Profile[]      @relation("ProfileImage")
+  projectImages  ProjectImage[]
+  projectCovers  Project[]      @relation("ProjectPrimaryImage")
+  resumeSettings SiteSettings[] @relation("PublishedResume")
+}
+
+// =====================================================================
+// Singletons de contenu (une seule ligne). id fixe = "singleton".
+// =====================================================================
+model Hero {
+  id             String   @id @default("singleton")
+  tagline        String   @default("")
+  headingTop     String   @default("")
+  headingBottom  String   @default("")
+  name           String
+  designation    String
+  alternateWords String[] @default([])
+  subheading     String   @default("")
+  ctaPrimaryLabel   String @default("Let's Collaborate")
+  ctaPrimaryHref    String @default("/#contact")
+  ctaResumeLabel    String @default("Get Resume")
+  heroImageId    String?
+  heroImage      Media?   @relation("HeroImage", fields: [heroImageId], references: [id])
+  updatedAt      DateTime @updatedAt
+}
+
+model Profile {
+  id             String   @id @default("singleton")
+  aboutTitle     String   @default("About")
+  aboutHighlight String   @default("The Software Engineer")
+  description    String
+  imageId        String?
+  image          Media?   @relation("ProfileImage", fields: [imageId], references: [id])
+  updatedAt      DateTime @updatedAt
+}
+
+model SiteSettings {
+  id               String   @id @default("singleton")
+  siteTitle        String   @default("")
+  metaDescription  String   @default("")
+  contactEmail     String   @default("")
+  phone            String   @default("")
+  address          String   @default("")
+  footerTagline    String   @default("")
+  // Visibilité et ordre des sections publiques (clé -> {visible, order})
+  sections         Json?
+  publishedResumeId String?
+  publishedResume  Media?   @relation("PublishedResume", fields: [publishedResumeId], references: [id])
+  // Lien de secours si aucun fichier CV n'est publié (ex. Google Drive)
+  resumeExternalUrl String?
+  updatedAt        DateTime @updatedAt
+}
+
+// =====================================================================
+// Collections de contenu
+// =====================================================================
+enum SkillCategory {
+  FRONTEND
+  BACKEND
+  LANGAGES
+  DATABASE
+  DATA_IA
+  MOBILE
+  TOOLS
+}
+
+model Skill {
+  id        String        @id @default(cuid())
+  name      String
+  category  SkillCategory
+  iconKey   String? // clé du registre utils/skill-icons.ts
+  color     String?
+  order     Int           @default(0)
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([category, order])
+}
+
+model SocialLink {
+  id       String  @id @default(cuid())
+  platform String
+  url      String
+  iconKey  String?
+  color    String?
+  order    Int     @default(0)
+  active   Boolean @default(true)
+
+  @@index([order])
+}
+
+model Project {
+  id             String   @id @default(cuid())
+  legacyId       Int? // conserve l'id numérique historique (routes /projects/[id])
+  name           String
+  description    String
+  role           String   @default("")
+  tools          String[] @default([])
+  highlights     String[] @default([])
+  challenges     String[] @default([])
+  codeUrl        String?
+  demoUrl        String?
+  date           String? // format libre existant ("2025-12-20")
+  status         String?
+  featured       Boolean  @default(false)
+  active         Boolean  @default(true)
+  order          Int      @default(0)
+  primaryImageId String?
+  primaryImage   Media?   @relation("ProjectPrimaryImage", fields: [primaryImageId], references: [id])
+  images         ProjectImage[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([active, order])
+}
+
+model ProjectImage {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  mediaId   String
+  media     Media   @relation(fields: [mediaId], references: [id])
+  order     Int     @default(0)
+
+  @@index([projectId, order])
+}
+
+// "Stage" — cartes de la timeline (recherche de stage / parcours pro)
+model Experience {
+  id       String   @id @default(cuid())
+  title    String
+  company  String   @default("")
+  duration String   @default("")
+  details  String[] @default([])
+  order    Int      @default(0)
+  active   Boolean  @default(true)
+
+  @@index([order])
+}
+
+model Education {
+  id          String  @id @default(cuid())
+  title       String
+  duration    String  @default("")
+  institution String  @default("")
+  order       Int     @default(0)
+  active      Boolean @default(true)
+
+  @@index([order])
+}
+
+// =====================================================================
+// Authentification (Auth.js v5 + adaptateur Prisma + WebAuthn/passkey)
+// + champs propres à l'admin unique (mot de passe + TOTP).
+// =====================================================================
+enum Role {
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(ADMIN)
+
+  // Repli mot de passe + 2FA TOTP
+  passwordHash      String?
+  totpSecret        String?
+  isTwoFactorEnabled Boolean @default(false)
+
+  accounts       Account[]
+  sessions       Session[]
+  authenticators Authenticator[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// Passkeys (WebAuthn) — schéma attendu par @auth/prisma-adapter
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
+
+// Verrouillage anti-bruteforce (login mot de passe)
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  success   Boolean  @default(false)
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+}
+
+// Journalisation minimale des opérations d'administration
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
