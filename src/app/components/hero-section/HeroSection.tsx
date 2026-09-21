@@ -1,18 +1,21 @@
 "use client";
-import { personalData } from "@/../utils/Data/PersonalData";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { SplitText } from "gsap/dist/SplitText";
 import Link from "next/link";
 import { useRef } from "react";
-import { BsGithub, BsLinkedin } from "react-icons/bs";
-import { FaTwitterSquare } from "react-icons/fa";
 import { MdDownload } from "react-icons/md";
 import { RiContactsFill } from "react-icons/ri";
-import { SiLeetcode } from "react-icons/si";
 import Tilt from "react-parallax-tilt";
+import type { HeroVM, SocialVM } from "@/lib/content-types";
+import { getSocialIcon } from "@/../utils/social-icons";
 
-const HeroSection = () => {
+interface HeroSectionProps {
+  hero: HeroVM;
+  socials: SocialVM[];
+}
+
+const HeroSection = ({ hero, socials }: HeroSectionProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const designationRef = useRef<HTMLElement>(null);
   const codeCardRef = useRef<HTMLDivElement>(null);
@@ -21,7 +24,10 @@ const HeroSection = () => {
     () => {
       gsap.registerPlugin(SplitText);
 
-      const titles = personalData.designationAlternateWords;
+      const titles =
+        hero.alternateWords.length > 0
+          ? hero.alternateWords
+          : [hero.designation];
       let index = 0;
 
       // Initial Intro Animation
@@ -114,88 +120,69 @@ const HeroSection = () => {
         <div className="order-2 lg:order-1 flex flex-col items-start gap-8">
           <div className="flex flex-col gap-4">
             <span className="hero-tag px-4 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold tracking-[0.3em] w-fit">
-              WELCOME TO MY UNIVERSE
+              {hero.tagline}
             </span>
             <h1 className="hero-heading text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.1]">
-              Crafting{" "}
+              {hero.headingTop.split(" ").slice(0, -1).join(" ")}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800">
-                Digital
+                {hero.headingTop.split(" ").slice(-1)}
               </span>
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-800 to-red-950">
-                Masterpieces
+                {hero.headingBottom}
               </span>
             </h1>
             <p className="hero-heading text-lg md:text-xl text-slate-400 max-w-xl leading-relaxed font-medium">
-              I'm{" "}
-              <span className="text-white font-bold">{personalData.name}</span>,
+              I'm <span className="text-white font-bold">{hero.name}</span>,
               Software
               <span
                 className="text-red-500 ml-2 font-bold inline-block min-w-[200px]"
                 ref={designationRef}
               >
-                {personalData.designation}
+                {hero.designation}
               </span>
               <br />
-              dedicated to building high-performance, user-focused digital
-              products{" "}
+              {hero.subheading}
             </p>
           </div>
 
           <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-4">
-              <Link
-                href={personalData.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="social-icon p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:text-red-500 hover:border-red-500/50 transition-all duration-300 shadow-xl"
-              >
-                <BsGithub size={24} />
-              </Link>
-              <Link
-                href={personalData.linkedIn}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="social-icon p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:text-red-500 hover:border-red-500/50 transition-all duration-300 shadow-xl"
-              >
-                <BsLinkedin size={24} />
-              </Link>
-              <Link
-                href={personalData.leetcode}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="social-icon p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:text-red-500 hover:border-red-500/50 transition-all duration-300 shadow-xl"
-              >
-                <SiLeetcode size={24} />
-              </Link>
-              <Link
-                href={personalData.twitter}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="social-icon p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:text-red-500 hover:border-red-500/50 transition-all duration-300 shadow-xl"
-              >
-                <FaTwitterSquare size={24} />
-              </Link>
+            <div className="flex items-center gap-4 flex-wrap">
+              {socials.map((social) => {
+                const Icon = getSocialIcon(social.iconKey);
+                return (
+                  <Link
+                    key={social.platform}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.platform}
+                    className="social-icon p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:text-red-500 hover:border-red-500/50 transition-all duration-300 shadow-xl"
+                  >
+                    <Icon size={24} />
+                  </Link>
+                );
+              })}
             </div>
 
             <div className="hero-cta flex flex-wrap gap-4">
               <Link
-                href="/#contact"
+                href={hero.ctaPrimaryHref}
                 className="group relative px-8 py-4 rounded-2xl bg-gradient-to-r from-red-600 to-red-900 text-white font-bold uppercase tracking-wider overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(239,68,68,0.3)]"
               >
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                 <span className="relative flex items-center gap-2">
-                  Let's Collaborate <RiContactsFill />
+                  {hero.ctaPrimaryLabel} <RiContactsFill />
                 </span>
               </Link>
 
               <Link
-                href={personalData.resume}
+                href={hero.resumeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group px-8 py-4 rounded-2xl border border-white/10 bg-white/5 text-white font-bold uppercase tracking-wider transition-all hover:bg-white/10 hover:border-red-500/50 flex items-center gap-2"
               >
-                Get Resume{" "}
+                {hero.ctaResumeLabel}{" "}
                 <MdDownload className="group-hover:translate-y-1 transition-transform" />
               </Link>
             </div>

@@ -1,12 +1,26 @@
 // src/app/components/Footer.tsx
 "use client";
-import { personalData } from "@/../utils/Data/PersonalData";
 import Image from "next/image";
 import Link from "next/link";
-import { FaGithub, FaInstagram, FaLinkedin, FaTwitter } from "react-icons/fa";
 import { Link as ScrollLink } from "react-scroll";
+import type { SettingsVM, SocialVM } from "@/lib/content-types";
+import { getSocialIcon } from "@/../utils/social-icons";
 
-const Footer = () => (
+const navItems = [
+  { label: "About", to: "about" },
+  { label: "Experience", to: "experience" },
+  { label: "Skills", to: "skills" },
+  { label: "Projects", to: "projects" },
+  { label: "Contact", to: "contact" },
+];
+
+const Footer = ({
+  settings,
+  socials,
+}: {
+  settings: SettingsVM;
+  socials: SocialVM[];
+}) => (
   <footer className="bg-[#050505] border-t border-white/5 text-gray-200">
     <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-24">
@@ -21,8 +35,7 @@ const Footer = () => (
             />
           </Link>
           <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
-            A curated showcase of high-performance full-stack applications, AI
-            experiments, and intuitive digital experiences built with purpose.
+            {settings.footerTagline}
           </p>
         </div>
 
@@ -32,13 +45,7 @@ const Footer = () => (
             Navigation
           </h3>
           <ul className="space-y-4">
-            {[
-              { label: "About", to: "about" },
-              { label: "Experience", to: "experience" },
-              { label: "Skills", to: "skills" },
-              { label: "Projects", to: "projects" },
-              { label: "Contact", to: "contact" },
-            ].map((item) => (
+            {navItems.map((item) => (
               <li key={item.to}>
                 <ScrollLink
                   to={item.to}
@@ -61,53 +68,36 @@ const Footer = () => (
             </h3>
             <div className="flex flex-col gap-3">
               <a
-                href={`mailto:${personalData.email}`}
+                href={`mailto:${settings.contactEmail}`}
                 className="text-gray-400 hover:text-red-500 transition-all font-medium"
               >
-                {personalData.email}
+                {settings.contactEmail}
               </a>
               <a
-                href={`tel:${personalData.phone}`}
+                href={`tel:${settings.phone}`}
                 className="text-gray-400 hover:text-red-500 transition-all font-medium"
               >
-                {personalData.phone}
+                {settings.phone}
               </a>
             </div>
           </div>
 
-          <div className="flex space-x-4">
-            <Link
-              href={personalData.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 hover:text-red-500 transition-all border border-white/5"
-            >
-              <FaGithub size={20} />
-            </Link>
-            <Link
-              href={personalData.linkedIn}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 hover:text-red-500 transition-all border border-white/5"
-            >
-              <FaLinkedin size={20} />
-            </Link>
-            <Link
-              href={personalData.twitter}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 hover:text-red-500 transition-all border border-white/5"
-            >
-              <FaTwitter size={20} />
-            </Link>
-            <Link
-              href={personalData.Instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 hover:text-red-500 transition-all border border-white/5"
-            >
-              <FaInstagram size={20} />
-            </Link>
+          <div className="flex flex-wrap gap-4">
+            {socials.map((social) => {
+              const Icon = getSocialIcon(social.iconKey);
+              return (
+                <Link
+                  key={social.platform}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.platform}
+                  className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 hover:text-red-500 transition-all border border-white/5"
+                >
+                  <Icon size={20} />
+                </Link>
+              );
+            })}
           </div>
         </div>
       </div>

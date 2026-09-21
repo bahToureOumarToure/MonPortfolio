@@ -5,6 +5,7 @@ import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTopButton from "@/../utils/ScrollToTopButton";
+import { getSettings, getSocialLinks } from "@/lib/queries";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -223,11 +224,16 @@ const jsonLd = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [settings, socials] = await Promise.all([
+    getSettings(),
+    getSocialLinks(),
+  ]);
+
   return (
     <html lang="fr">
       <head>
@@ -245,7 +251,7 @@ export default function RootLayout({
           <div className="container">{children}</div>
         </main>
         <ScrollToTopButton />
-        <Footer />
+        <Footer settings={settings} socials={socials} />
       </body>
     </html>
   );

@@ -1,11 +1,10 @@
 "use client";
-import { projectsData } from "@/../utils/Data/projects-data";
 import { MoveUpRight } from "lucide-react";
 import Link from "next/link";
 import ProjectCard from "./project-card";
+import type { ProjectVM } from "@/lib/content-types";
 
-const Projects = () => {
-  const displayedProjects = projectsData.slice(0, 3);
+const Projects = ({ projects }: { projects: ProjectVM[] }) => {
   return (
     <section
       id="projects"
@@ -43,7 +42,7 @@ const Projects = () => {
           </div>
 
           <div className="grid gap-10 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full">
-            {displayedProjects.map((project) => (
+            {projects.map((project) => (
               <ProjectCard key={project.id} project={project} />
             ))}
           </div>

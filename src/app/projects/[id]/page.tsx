@@ -1,4 +1,4 @@
-import { projectsData } from "@/../utils/Data/projects-data";
+import { getProjectByLegacyId, getProjects } from "@/lib/queries";
 import FeaturedProjects from "@/app/components/projects/_components/FeaturedProjects";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,11 +29,13 @@ type Props = {
 
 const ProjectDetails = async ({ params }: Props) => {
   const { id } = await params;
-  const project = projectsData.find((p) => p.id === parseInt(id));
+  const project = await getProjectByLegacyId(parseInt(id));
 
   if (!project) {
     notFound();
   }
+
+  const otherProjects = await getProjects();
 
   return (
     <div className="min-h-screen  text-white py-12 px-4 lg:px-8">
@@ -276,7 +278,7 @@ const ProjectDetails = async ({ params }: Props) => {
               </span>
             </Link>
           </div>
-          <FeaturedProjects />
+          <FeaturedProjects projects={otherProjects} />
         </div>
       </div>
     </div>
