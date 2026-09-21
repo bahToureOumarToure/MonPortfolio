@@ -23,7 +23,7 @@ const items = [
     icon: ShieldCheck,
     ready: true,
   },
-  { href: "/admin/projects", label: "Projets", icon: FolderGit2, ready: false },
+  { href: "/admin/projects", label: "Projets", icon: FolderGit2, ready: true },
   { href: "/admin/skills", label: "Compétences", icon: Cpu, ready: false },
   {
     href: "/admin/profile",
