@@ -2,6 +2,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Link as ScrollLink } from "react-scroll";
 import type { SettingsVM, SocialVM } from "@/lib/content-types";
 import { getSocialIcon } from "@/../utils/social-icons";
@@ -20,98 +21,104 @@ const Footer = ({
 }: {
   settings: SettingsVM;
   socials: SocialVM[];
-}) => (
-  <footer className="bg-[#050505] border-t border-white/5 text-gray-200">
-    <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-24">
-        <div className="flex flex-col gap-6">
-          <Link href="/" className="w-fit">
-            <Image
-              src="/logo.png"
-              alt="Bah Oumar Touré Logo"
-              width={100}
-              height={100}
-              className="brightness-125"
-            />
-          </Link>
-          <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
-            {settings.footerTagline}
-          </p>
-        </div>
+}) => {
+  const pathname = usePathname();
+  // Pas de footer public dans l'admin.
+  if (pathname?.startsWith("/admin")) return null;
 
-        {/* Quick Links */}
-        <div>
-          <h3 className="text-white font-bold uppercase tracking-widest text-xs mb-6 opacity-50">
-            Navigation
-          </h3>
-          <ul className="space-y-4">
-            {navItems.map((item) => (
-              <li key={item.to}>
-                <ScrollLink
-                  to={item.to}
-                  smooth
-                  duration={500}
-                  className="text-gray-400 hover:text-red-500 transition-all cursor-pointer font-medium"
-                >
-                  {item.label}
-                </ScrollLink>
-              </li>
-            ))}
-          </ul>
-        </div>
+  return (
+    <footer className="bg-[#050505] border-t border-white/5 text-gray-200">
+      <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-24">
+          <div className="flex flex-col gap-6">
+            <Link href="/" className="w-fit">
+              <Image
+                src="/logo.png"
+                alt="Bah Oumar Touré Logo"
+                width={100}
+                height={100}
+                className="brightness-125"
+              />
+            </Link>
+            <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
+              {settings.footerTagline}
+            </p>
+          </div>
 
-        {/* Contact & Social */}
-        <div className="flex flex-col gap-6">
+          {/* Quick Links */}
           <div>
             <h3 className="text-white font-bold uppercase tracking-widest text-xs mb-6 opacity-50">
-              Connect
+              Navigation
             </h3>
-            <div className="flex flex-col gap-3">
-              <a
-                href={`mailto:${settings.contactEmail}`}
-                className="text-gray-400 hover:text-red-500 transition-all font-medium"
-              >
-                {settings.contactEmail}
-              </a>
-              <a
-                href={`tel:${settings.phone}`}
-                className="text-gray-400 hover:text-red-500 transition-all font-medium"
-              >
-                {settings.phone}
-              </a>
+            <ul className="space-y-4">
+              {navItems.map((item) => (
+                <li key={item.to}>
+                  <ScrollLink
+                    to={item.to}
+                    smooth
+                    duration={500}
+                    className="text-gray-400 hover:text-red-500 transition-all cursor-pointer font-medium"
+                  >
+                    {item.label}
+                  </ScrollLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact & Social */}
+          <div className="flex flex-col gap-6">
+            <div>
+              <h3 className="text-white font-bold uppercase tracking-widest text-xs mb-6 opacity-50">
+                Connect
+              </h3>
+              <div className="flex flex-col gap-3">
+                <a
+                  href={`mailto:${settings.contactEmail}`}
+                  className="text-gray-400 hover:text-red-500 transition-all font-medium"
+                >
+                  {settings.contactEmail}
+                </a>
+                <a
+                  href={`tel:${settings.phone}`}
+                  className="text-gray-400 hover:text-red-500 transition-all font-medium"
+                >
+                  {settings.phone}
+                </a>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-4">
+              {socials.map((social) => {
+                const Icon = getSocialIcon(social.iconKey);
+                return (
+                  <Link
+                    key={social.platform}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.platform}
+                    className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 hover:text-red-500 transition-all border border-white/5"
+                  >
+                    <Icon size={20} />
+                  </Link>
+                );
+              })}
             </div>
           </div>
+        </div>
 
-          <div className="flex flex-wrap gap-4">
-            {socials.map((social) => {
-              const Icon = getSocialIcon(social.iconKey);
-              return (
-                <Link
-                  key={social.platform}
-                  href={social.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.platform}
-                  className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 hover:text-red-500 transition-all border border-white/5"
-                >
-                  <Icon size={20} />
-                </Link>
-              );
-            })}
-          </div>
+        {/* Divider & Copyright */}
+        <div className="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
+          <p>
+            &copy; {new Date().getFullYear()} Bah Oumar Touré . All rights
+            reserved.
+          </p>
+          <p className="flex items-center gap-2">Morocco</p>
         </div>
       </div>
-
-      {/* Divider & Copyright */}
-      <div className="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
-        <p>
-          &copy; {new Date().getFullYear()} Bah Oumar Touré . All rights
-          reserved.
-        </p>
-        <p className="flex items-center gap-2">Morocco</p>
-      </div>
-    </div>
-  </footer>
-);
+    </footer>
+  );
+};
 
 export default Footer;
