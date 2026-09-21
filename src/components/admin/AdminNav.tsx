@@ -24,15 +24,15 @@ const items = [
     ready: true,
   },
   { href: "/admin/projects", label: "Projets", icon: FolderGit2, ready: true },
-  { href: "/admin/skills", label: "Compétences", icon: Cpu, ready: false },
+  { href: "/admin/skills", label: "Compétences", icon: Cpu, ready: true },
   {
     href: "/admin/profile",
     label: "Profil / Hero",
     icon: UserRound,
     ready: true,
   },
-  { href: "/admin/experience", label: "Stage", icon: Briefcase, ready: false },
-  { href: "/admin/socials", label: "Liens sociaux", icon: Link2, ready: false },
+  { href: "/admin/experience", label: "Stage", icon: Briefcase, ready: true },
+  { href: "/admin/socials", label: "Liens sociaux", icon: Link2, ready: true },
   { href: "/admin/media", label: "Médias", icon: Images, ready: false },
   {
     href: "/admin/settings",
