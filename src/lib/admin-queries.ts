@@ -20,3 +20,35 @@ export async function getAdminProject(id: string) {
     },
   });
 }
+
+export async function getAdminHero() {
+  return prisma.hero.findUnique({
+    where: { id: "singleton" },
+    include: { heroImage: true },
+  });
+}
+
+export async function getAdminProfile() {
+  return prisma.profile.findUnique({
+    where: { id: "singleton" },
+    include: { image: true },
+  });
+}
+
+export async function getAdminSettings() {
+  return prisma.siteSettings.findUnique({ where: { id: "singleton" } });
+}
+
+export async function getAdminSkills() {
+  return prisma.skill.findMany({
+    orderBy: [{ category: "asc" }, { order: "asc" }],
+  });
+}
+
+export async function getAdminSocials() {
+  return prisma.socialLink.findMany({ orderBy: { order: "asc" } });
+}
+
+export async function getAdminExperiences() {
+  return prisma.experience.findMany({ orderBy: { order: "asc" } });
+}

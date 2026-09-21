@@ -29,7 +29,7 @@ const items = [
     href: "/admin/profile",
     label: "Profil / Hero",
     icon: UserRound,
-    ready: false,
+    ready: true,
   },
   { href: "/admin/experience", label: "Stage", icon: Briefcase, ready: false },
   { href: "/admin/socials", label: "Liens sociaux", icon: Link2, ready: false },
@@ -38,7 +38,7 @@ const items = [
     href: "/admin/settings",
     label: "Paramètres",
     icon: Settings,
-    ready: false,
+    ready: true,
   },
 ];
 
