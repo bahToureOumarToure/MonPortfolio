@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircle, Save } from "lucide-react";
 import { createProject, updateProject } from "@/lib/actions/projects";
+import MediaPicker from "@/components/admin/MediaPicker";
 
 export interface ProjectFormValues {
   name: string;
@@ -18,7 +19,7 @@ export interface ProjectFormValues {
   featured: boolean;
   active: boolean;
   order: number;
-  images: string; // une URL/chemin par ligne (1re = principale)
+  images: string[]; // URLs (la 1re = image principale)
 }
 
 const EMPTY: ProjectFormValues = {
@@ -35,7 +36,7 @@ const EMPTY: ProjectFormValues = {
   featured: false,
   active: true,
   order: 0,
-  images: "",
+  images: [],
 };
 
 const lines = (s: string) =>
@@ -91,7 +92,7 @@ export default function ProjectForm({
       featured: v.featured,
       active: v.active,
       order: Number(v.order) || 0,
-      images: lines(v.images),
+      images: v.images,
     };
     try {
       if (projectId) await updateProject(projectId, payload);
@@ -184,16 +185,12 @@ export default function ProjectForm({
 
       <div>
         <label className={labelCls}>
-          Images — une URL/chemin par ligne (la 1re est l'image principale)
+          Images (téléverse ou choisis ; la 1re = image principale)
         </label>
-        <textarea
-          className={inputCls}
-          rows={3}
+        <MediaPicker
+          multiple
           value={v.images}
-          onChange={(e) => set("images", e.target.value)}
-          placeholder={
-            "/projects/mon-projet/cover.png\nhttps://…/screenshot.png"
-          }
+          onChange={(urls) => set("images", urls as string[])}
         />
       </div>
 

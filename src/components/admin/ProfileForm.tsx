@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircle, Save } from "lucide-react";
 import { updateProfile } from "@/lib/actions/singletons";
+import MediaPicker from "@/components/admin/MediaPicker";
 
 const inputCls =
   "bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-600 outline-none focus:border-red-500/50 w-full";
@@ -84,12 +85,10 @@ export default function ProfileForm({
       </div>
 
       <div>
-        <label className={labelCls}>Photo de profil (URL/chemin)</label>
-        <input
-          className={inputCls}
+        <label className={labelCls}>Photo de profil</label>
+        <MediaPicker
           value={v.image}
-          onChange={(e) => set("image", e.target.value)}
-          placeholder="/profile.png"
+          onChange={(url) => set("image", url as string)}
         />
       </div>
 

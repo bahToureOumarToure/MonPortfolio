@@ -36,7 +36,17 @@ export async function getAdminProfile() {
 }
 
 export async function getAdminSettings() {
-  return prisma.siteSettings.findUnique({ where: { id: "singleton" } });
+  return prisma.siteSettings.findUnique({
+    where: { id: "singleton" },
+    include: { publishedResume: true },
+  });
+}
+
+export async function getAdminMedia(kind?: "IMAGE" | "DOCUMENT") {
+  return prisma.media.findMany({
+    where: kind ? { kind } : undefined,
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 export async function getAdminSkills() {

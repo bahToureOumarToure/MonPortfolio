@@ -33,7 +33,7 @@ const items = [
   },
   { href: "/admin/experience", label: "Stage", icon: Briefcase, ready: true },
   { href: "/admin/socials", label: "Liens sociaux", icon: Link2, ready: true },
-  { href: "/admin/media", label: "Médias", icon: Images, ready: false },
+  { href: "/admin/media", label: "Médias", icon: Images, ready: true },
   {
     href: "/admin/settings",
     label: "Paramètres",

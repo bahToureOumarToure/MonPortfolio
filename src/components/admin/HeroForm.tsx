@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircle, Save } from "lucide-react";
 import { updateHero } from "@/lib/actions/singletons";
+import MediaPicker from "@/components/admin/MediaPicker";
 
 const inputCls =
   "bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-600 outline-none focus:border-red-500/50 w-full";
@@ -154,14 +155,10 @@ export default function HeroForm({ initial }: { initial: HeroFormValues }) {
       </div>
 
       <div>
-        <label className={labelCls}>
-          Image du Hero (URL/chemin — optionnel)
-        </label>
-        <input
-          className={inputCls}
+        <label className={labelCls}>Image du Hero (optionnel)</label>
+        <MediaPicker
           value={v.heroImage}
-          onChange={(e) => set("heroImage", e.target.value)}
-          placeholder="/profile.png"
+          onChange={(url) => set("heroImage", url as string)}
         />
       </div>
 

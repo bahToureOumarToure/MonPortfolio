@@ -33,7 +33,7 @@ export default async function EditProjectPage({
     featured: project.featured,
     active: project.active,
     order: project.order,
-    images: project.images.map((i) => i.media.url).join("\n"),
+    images: project.images.map((i) => i.media.url),
   };
 
   return (
