@@ -12,6 +12,19 @@ const MB = 1024 * 1024;
 // Autorise l'upload client Vercel Blob : contrôle admin + restriction
 // type/taille imposée côté serveur (Blob refuse tout ce qui n'est pas listé).
 export async function POST(request: Request): Promise<NextResponse> {
+  // Sans jeton Blob côté serveur, la génération du token client échoue. On le
+  // signale immédiatement et clairement plutôt que de laisser le SDK réessayer
+  // (ce qui donne un « chargement » interminable côté navigateur).
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return NextResponse.json(
+      {
+        error:
+          "Stockage indisponible : BLOB_READ_WRITE_TOKEN n'est pas défini sur le serveur. Ajoute cette variable d'environnement (locale et/ou Production Vercel).",
+      },
+      { status: 503 },
+    );
+  }
+
   const body = (await request.json()) as HandleUploadBody;
 
   try {
