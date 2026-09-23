@@ -30,6 +30,7 @@ export default function MediaPicker({
       : [];
 
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [libOpen, setLibOpen] = useState(false);
@@ -54,11 +55,14 @@ export default function MediaPicker({
     setBusy(true);
     setError(null);
     setWarning(null);
+    setProgress(0);
     try {
       const uploaded: string[] = [];
       let mismatch = false;
       for (const file of Array.from(files)) {
-        const media = await uploadFile(file, "IMAGE");
+        const media = await uploadFile(file, "IMAGE", (p) =>
+          setProgress(p.percentage),
+        );
         uploaded.push(media.url);
         if (ratioMismatch(media.width, media.height, aspect)) {
           mismatch = true;
@@ -74,6 +78,7 @@ export default function MediaPicker({
       setError(e instanceof Error ? e.message : "Échec de l'upload.");
     } finally {
       setBusy(false);
+      setProgress(null);
       if (fileRef.current) fileRef.current.value = "";
     }
   }
@@ -141,7 +146,7 @@ export default function MediaPicker({
           ) : (
             <Upload className="w-4 h-4" />
           )}
-          Téléverser
+          {busy ? `Téléversement… ${progress ?? 0}%` : "Téléverser"}
         </button>
         <button
           type="button"

@@ -35,6 +35,7 @@ export default function MediaLibrary({
 }) {
   const [items, setItems] = useState<MediaDTO[]>(initial);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
@@ -50,16 +51,20 @@ export default function MediaLibrary({
     if (!files || files.length === 0) return;
     setBusy(true);
     setError(null);
+    setProgress(0);
     try {
       const added: MediaDTO[] = [];
       for (const file of Array.from(files)) {
-        added.push(await uploadFile(file, "IMAGE"));
+        added.push(
+          await uploadFile(file, "IMAGE", (p) => setProgress(p.percentage)),
+        );
       }
       setItems((prev) => [...added, ...prev]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Échec de l'upload.");
     } finally {
       setBusy(false);
+      setProgress(null);
       if (fileRef.current) fileRef.current.value = "";
     }
   }
@@ -127,7 +132,7 @@ export default function MediaLibrary({
           ) : (
             <Upload className="w-4 h-4" />
           )}
-          Téléverser des images
+          {busy ? `Téléversement… ${progress ?? 0}%` : "Téléverser des images"}
         </button>
         {error && <span className="text-sm text-red-400">{error}</span>}
       </div>

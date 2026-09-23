@@ -35,6 +35,14 @@ yarn-error.log*
 # vercel
 .vercel
 
+# PWA (service worker généré au build — ne pas committer)
+/public/sw.js
+/public/sw.js.map
+/public/workbox-*.js
+/public/workbox-*.js.map
+/public/worker-*.js
+/public/fallback-*.js
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
