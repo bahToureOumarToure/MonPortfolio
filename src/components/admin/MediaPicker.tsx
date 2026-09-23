@@ -3,14 +3,26 @@ import { useEffect, useRef, useState } from "react";
 import { Upload, ImagePlus, X, Star, LoaderCircle, Check } from "lucide-react";
 import { uploadFile } from "@/lib/upload-client";
 import { listMedia, type MediaDTO } from "@/lib/actions/media";
+import {
+  SLOT,
+  ratioMismatch,
+  describeOrientation,
+  type SlotAspect,
+} from "@/lib/media-format";
 
 interface Props {
   value: string | string[];
   onChange: (v: string | string[]) => void;
   multiple?: boolean;
+  aspect?: SlotAspect;
 }
 
-export default function MediaPicker({ value, onChange, multiple }: Props) {
+export default function MediaPicker({
+  value,
+  onChange,
+  multiple,
+  aspect = "video",
+}: Props) {
   const selected = multiple
     ? ((value as string[]) ?? [])
     : value
@@ -19,6 +31,7 @@ export default function MediaPicker({ value, onChange, multiple }: Props) {
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const [libOpen, setLibOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -40,13 +53,22 @@ export default function MediaPicker({ value, onChange, multiple }: Props) {
     if (!files || files.length === 0) return;
     setBusy(true);
     setError(null);
+    setWarning(null);
     try {
       const uploaded: string[] = [];
+      let mismatch = false;
       for (const file of Array.from(files)) {
         const media = await uploadFile(file, "IMAGE");
         uploaded.push(media.url);
+        if (ratioMismatch(media.width, media.height, aspect)) {
+          mismatch = true;
+          setWarning(
+            `Image en ${describeOrientation(media.width, media.height)} : elle sera recadrée au format ${SLOT[aspect].label} de cet emplacement.`,
+          );
+        }
         if (!multiple) break;
       }
+      if (!mismatch) setWarning(null);
       commit(multiple ? [...selected, ...uploaded] : [uploaded[0]]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Échec de l'upload.");
@@ -64,7 +86,7 @@ export default function MediaPicker({ value, onChange, multiple }: Props) {
           {selected.map((url, i) => (
             <div
               key={url}
-              className="relative w-28 h-20 rounded-lg overflow-hidden border border-white/10 bg-[#0a0a0a] group"
+              className={`relative w-28 ${SLOT[aspect].cls} rounded-lg overflow-hidden border border-white/10 bg-[#0a0a0a] group`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={url} alt="" className="w-full h-full object-cover" />
@@ -131,6 +153,10 @@ export default function MediaPicker({ value, onChange, multiple }: Props) {
         </button>
       </div>
       {error && <p className="text-sm text-red-400">{error}</p>}
+      {warning && <p className="text-xs text-amber-400/90">⚠ {warning}</p>}
+      <p className="text-[11px] text-slate-500">
+        Format attendu ici : {SLOT[aspect].label}.
+      </p>
 
       {libOpen && (
         <LibraryModal

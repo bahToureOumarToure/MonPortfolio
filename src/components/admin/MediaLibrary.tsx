@@ -7,15 +7,43 @@ import {
   Check,
   FileText,
   LoaderCircle,
+  Wand2,
+  UserRound,
+  FolderGit2,
+  X,
 } from "lucide-react";
 import { uploadFile } from "@/lib/upload-client";
-import { deleteMedia, type MediaDTO } from "@/lib/actions/media";
+import {
+  deleteMedia,
+  assignMedia,
+  type MediaDTO,
+  type AssignTarget,
+} from "@/lib/actions/media";
+import {
+  SLOT,
+  ratioMismatch,
+  describeOrientation,
+  type SlotAspect,
+} from "@/lib/media-format";
 
-export default function MediaLibrary({ initial }: { initial: MediaDTO[] }) {
+export default function MediaLibrary({
+  initial,
+  targets,
+}: {
+  initial: MediaDTO[];
+  targets: AssignTarget[];
+}) {
   const [items, setItems] = useState<MediaDTO[]>(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [assigning, setAssigning] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{
+    id: string;
+    ok: boolean;
+    text: string;
+  } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function onFiles(files: FileList | null) {
@@ -53,6 +81,31 @@ export default function MediaLibrary({ initial }: { initial: MediaDTO[] }) {
     }
   }
 
+  async function assign(m: MediaDTO, target: string, slot: SlotAspect) {
+    if (ratioMismatch(m.width, m.height, slot)) {
+      const ok = window.confirm(
+        `Cette image est en ${describeOrientation(m.width, m.height)}. ` +
+          `Elle sera recadrée au format ${SLOT[slot].label} de cet emplacement. Continuer ?`,
+      );
+      if (!ok) return;
+    }
+    setAssigning(m.id);
+    setMsg(null);
+    try {
+      await assignMedia(m.id, target);
+      setMsg({ id: m.id, ok: true, text: "Assignée ✓ (visible sur le site)" });
+    } catch (e) {
+      setMsg({
+        id: m.id,
+        ok: false,
+        text: e instanceof Error ? e.message : "Échec.",
+      });
+    } finally {
+      setAssigning(null);
+      setMenuFor(null);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
@@ -86,7 +139,7 @@ export default function MediaLibrary({ initial }: { initial: MediaDTO[] }) {
           {items.map((m) => (
             <div
               key={m.id}
-              className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden flex flex-col"
+              className="relative rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden flex flex-col"
             >
               <div className="aspect-video bg-[#050505] flex items-center justify-center">
                 {m.kind === "IMAGE" ? (
@@ -106,7 +159,31 @@ export default function MediaLibrary({ initial }: { initial: MediaDTO[] }) {
                   title={m.filename}
                 >
                   {m.filename}
+                  {m.width && m.height ? (
+                    <span className="text-slate-600">
+                      {" "}
+                      · {m.width}×{m.height}
+                    </span>
+                  ) : null}
                 </p>
+
+                {m.kind === "IMAGE" && (
+                  <button
+                    onClick={() =>
+                      setMenuFor((v) => (v === m.id ? null : m.id))
+                    }
+                    disabled={assigning === m.id}
+                    className="flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-red-600/10 border border-red-600/20 text-red-400 hover:bg-red-600/20 text-xs font-bold uppercase tracking-widest disabled:opacity-50"
+                  >
+                    {assigning === m.id ? (
+                      <LoaderCircle className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Wand2 className="w-3.5 h-3.5" />
+                    )}
+                    Utiliser pour…
+                  </button>
+                )}
+
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => copy(m.url)}
@@ -127,7 +204,53 @@ export default function MediaLibrary({ initial }: { initial: MediaDTO[] }) {
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
+
+                {msg?.id === m.id && (
+                  <p
+                    className={`text-[11px] ${msg.ok ? "text-emerald-400" : "text-red-400"}`}
+                  >
+                    {msg.text}
+                  </p>
+                )}
               </div>
+
+              {/* Menu d'assignation */}
+              {menuFor === m.id && (
+                <div className="absolute inset-x-2 bottom-2 z-20 rounded-xl border border-white/10 bg-[#0a0a0a] shadow-2xl p-2 flex flex-col gap-1 max-h-56 overflow-y-auto">
+                  <div className="flex items-center justify-between px-2 py-1">
+                    <span className="text-[10px] uppercase tracking-widest text-slate-500">
+                      Utiliser pour
+                    </span>
+                    <button
+                      onClick={() => setMenuFor(null)}
+                      className="text-slate-500 hover:text-white"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => assign(m, "profile", "portrait")}
+                    className="flex items-center gap-2 px-2 py-2 rounded-lg text-left text-xs text-slate-200 hover:bg-white/5"
+                  >
+                    <UserRound className="w-3.5 h-3.5 text-red-400" />
+                    Photo de profil{" "}
+                    <span className="text-slate-500">(4:5)</span>
+                  </button>
+                  {targets.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => assign(m, `project:${t.id}`, "video")}
+                      className="flex items-center gap-2 px-2 py-2 rounded-lg text-left text-xs text-slate-200 hover:bg-white/5"
+                    >
+                      <FolderGit2 className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                      <span className="truncate">{t.name}</span>
+                      <span className="text-slate-500 ml-auto shrink-0">
+                        (16:9)
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
