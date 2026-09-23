@@ -189,6 +189,7 @@ export default function ProjectForm({
         </label>
         <MediaPicker
           multiple
+          aspect="video"
           value={v.images}
           onChange={(urls) => set("images", urls as string[])}
         />

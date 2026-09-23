@@ -87,6 +87,7 @@ export default function ProfileForm({
       <div>
         <label className={labelCls}>Photo de profil</label>
         <MediaPicker
+          aspect="portrait"
           value={v.image}
           onChange={(url) => set("image", url as string)}
         />

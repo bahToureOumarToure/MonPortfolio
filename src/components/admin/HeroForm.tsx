@@ -157,6 +157,7 @@ export default function HeroForm({ initial }: { initial: HeroFormValues }) {
       <div>
         <label className={labelCls}>Image du Hero (optionnel)</label>
         <MediaPicker
+          aspect="video"
           value={v.heroImage}
           onChange={(url) => set("heroImage", url as string)}
         />
