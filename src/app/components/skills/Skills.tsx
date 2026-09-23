@@ -1,13 +1,14 @@
 "use client";
-import { getSkillsByCategory, SkillCategory } from "@/../utils/Data/skills";
+import type { SkillCategory } from "@/../utils/Data/skills";
 import { getSkillIcon, getSkillColor } from "@/../utils/skill-icons";
 import Marquee from "react-fast-marquee";
 import SectionReveal from "../SectionReveal";
+import type { GroupedSkills, SkillVM } from "@/lib/content-types";
 
-// --- Item de skill (inchangé dans l'esprit) ---
-const SkillItem = ({ skill }: { skill: string }) => {
-  const Icon = getSkillIcon(skill);
-  const color = getSkillColor(skill);
+// --- Item de skill ---
+const SkillItem = ({ skill }: { skill: SkillVM }) => {
+  const Icon = getSkillIcon(skill.iconKey);
+  const color = skill.color ?? getSkillColor(skill.iconKey);
 
   return (
     <div className="mx-3 my-3 group">
@@ -20,7 +21,7 @@ const SkillItem = ({ skill }: { skill: string }) => {
         </div>
         <div className="flex flex-col">
           <span className="text-xs font-bold text-white tracking-wide uppercase group-hover:text-red-500 transition-colors">
-            {skill}
+            {skill.name}
           </span>
         </div>
         <div
@@ -35,7 +36,7 @@ const SkillItem = ({ skill }: { skill: string }) => {
 // --- Ligne de stack (titre + marquee) ---
 interface StackRowProps {
   title: SkillCategory;
-  skills: string[];
+  skills: SkillVM[];
   direction?: "left" | "right";
   delay?: number;
 }
@@ -85,9 +86,7 @@ const StackRow = ({
 };
 
 // --- Composant principal ---
-function Skills() {
-  const grouped = getSkillsByCategory();
-
+function Skills({ grouped }: { grouped: GroupedSkills }) {
   // Ordre d'affichage et direction alternée pour l'effet visuel
   const stackOrder: { category: SkillCategory; direction: "left" | "right" }[] =
     [
@@ -101,7 +100,10 @@ function Skills() {
     ];
 
   return (
-    <section id="skills" className="relative z-50 py-24 lg:py-48 overflow-hidden">
+    <section
+      id="skills"
+      className="relative z-50 py-24 lg:py-48 overflow-hidden"
+    >
       {/* Background atmosphérique */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-red-600/10 blur-[150px] rounded-full pointer-events-none" />
       <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-red-950/10 blur-[120px] rounded-full pointer-events-none" />

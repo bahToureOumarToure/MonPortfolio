@@ -1,5 +1,5 @@
 export const personalData = {
-  name: "< Bah Omar Bah />",
+  name: "< Bah Oumar Touré />",
   profile: "/profile.png",
   designation: "Full-Stack Web/Mobile & AI/Data and Designer",
   designationAlternateWords: [

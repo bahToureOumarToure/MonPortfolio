@@ -1,10 +1,10 @@
 "use client";
-import { experiences } from "@/../utils/Data/experience";
 import { BsPersonWorkspace } from "react-icons/bs";
 import { Calendar, Building2, ChevronRight } from "lucide-react";
 import SectionReveal from "../SectionReveal";
+import type { ExperienceVM } from "@/lib/content-types";
 
-function Experience() {
+function Experience({ experiences }: { experiences: ExperienceVM[] }) {
   return (
     <section
       id="experience"

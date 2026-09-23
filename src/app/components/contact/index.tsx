@@ -1,14 +1,12 @@
 "use client";
 import Link from "next/link";
-import { BiLogoLinkedin } from "react-icons/bi";
-import { FaFacebook, FaStackOverflow } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
-import { IoLogoGithub, IoMdCall } from "react-icons/io";
+import { IoMdCall } from "react-icons/io";
 import { MdAlternateEmail } from "react-icons/md";
-import { personalData } from "@/../utils/Data/PersonalData";
 import ContactWithoutCaptcha from "./contact-without-captcha";
 import SectionReveal from "../SectionReveal";
 import { MapPin, Send, MessageSquare } from "lucide-react";
+import type { SettingsVM, SocialVM } from "@/lib/content-types";
+import { getSocialIcon } from "@/../utils/social-icons";
 
 interface ContactLinkProps {
   href: string;
@@ -56,9 +54,18 @@ const ContactInfoCard = ({
   </Link>
 );
 
-function ContactSection() {
+function ContactSection({
+  settings,
+  socials,
+}: {
+  settings: SettingsVM;
+  socials: SocialVM[];
+}) {
   return (
-    <section id="contact" className="relative z-50 py-24 lg:py-48 overflow-hidden">
+    <section
+      id="contact"
+      className="relative z-50 py-24 lg:py-48 overflow-hidden"
+    >
       {/* Background Decorative Elements */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-red-500/10 blur-[150px] rounded-full pointer-events-none" />
 
@@ -104,24 +111,24 @@ function ContactSection() {
                 </h3>
                 <div className="flex flex-col gap-4">
                   <ContactInfoCard
-                    href={`mailto:${personalData.email}`}
+                    href={`mailto:${settings.contactEmail}`}
                     icon={MdAlternateEmail}
                     label="Email"
-                    value={personalData.email}
+                    value={settings.contactEmail}
                     color="#ef4444"
                   />
                   <ContactInfoCard
-                    href={`tel:${personalData.phone}`}
+                    href={`tel:${settings.phone}`}
                     icon={IoMdCall}
                     label="Phone"
-                    value={personalData.phone}
+                    value={settings.phone}
                     color="#dc2626"
                   />
                   <ContactInfoCard
                     href="#"
                     icon={MapPin}
                     label="Location"
-                    value={personalData.address}
+                    value={settings.address}
                     color="#991b1b"
                   />
                 </div>
@@ -134,46 +141,24 @@ function ContactSection() {
                   Social Presence
                 </h3>
                 <div className="flex flex-wrap gap-4">
-                  {[
-                    {
-                      href: personalData.github,
-                      icon: IoLogoGithub,
-                      color: "#ffffff",
-                    },
-                    {
-                      href: personalData.linkedIn,
-                      icon: BiLogoLinkedin,
-                      color: "#0077b5",
-                    },
-                    {
-                      href: personalData.twitter,
-                      icon: FaXTwitter,
-                      color: "#1da1f2",
-                    },
-                    {
-                      href: personalData.stackOverflow,
-                      icon: FaStackOverflow,
-                      color: "#f48024",
-                    },
-                    {
-                      href: personalData.facebook,
-                      icon: FaFacebook,
-                      color: "#1877f2",
-                    },
-                  ].map((social, idx) => (
-                    <Link
-                      key={idx}
-                      href={social.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-14 h-14 rounded-2xl border border-white/5 bg-white/[0.02] flex items-center justify-center hover:bg-white/[0.05] hover:border-white/20 hover:scale-110 transition-all duration-300"
-                    >
-                      <social.icon
-                        className="w-6 h-6"
-                        style={{ color: social.color }}
-                      />
-                    </Link>
-                  ))}
+                  {socials.map((social) => {
+                    const Icon = getSocialIcon(social.iconKey);
+                    return (
+                      <Link
+                        key={social.platform}
+                        href={social.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={social.platform}
+                        className="w-14 h-14 rounded-2xl border border-white/5 bg-white/[0.02] flex items-center justify-center hover:bg-white/[0.05] hover:border-white/20 hover:scale-110 transition-all duration-300"
+                      >
+                        <Icon
+                          className="w-6 h-6"
+                          style={{ color: social.color }}
+                        />
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             </SectionReveal>

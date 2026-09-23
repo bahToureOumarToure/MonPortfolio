@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import type { ProjectVM } from "@/lib/content-types";
 
 export interface AnimationLottieProps {
   animationPath: object; // JSON object for the animation data.
@@ -8,20 +9,8 @@ export interface GlowCardProps {
   children: ReactNode;
   identifier: string;
 }
-interface Project {
-  id: number;
-  name: string;
-  tools: string[];
-  role: string;
-  description: string;
-  code: string;
-  demo: string;
-  date: string;
-  images: string[];
-  videos?: string[];
-}
 export interface ProjectCardProps {
-  project: Project;
+  project: ProjectVM;
 }
 export interface Props {
   children: ReactNode;

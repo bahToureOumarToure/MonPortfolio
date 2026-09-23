@@ -27,6 +27,9 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Le portfolio public n'affiche pas sa barre de navigation dans l'admin.
+  if (pathname?.startsWith("/admin")) return null;
+
   const renderLink = (
     item: { label: string; to: string },
     isMobile = false,
@@ -89,7 +92,7 @@ const Navbar = () => {
         >
           <Image
             src={img}
-            alt="Bah Omar Touré"
+            alt="Bah Oumar Touré"
             width={isScrolled ? 50 : 60}
             height={isScrolled ? 50 : 60}
             className="transition-all duration-500"

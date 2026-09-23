@@ -1,37 +1,58 @@
-import About from "./components/about/page";
+import About from "./components/about/About";
 import Contact from "./components/contact/index";
-import Experience from "./components/experience/page";
-import HeroSection from "./components/hero-section/page";
+import Experience from "./components/experience/Experience";
+import HeroSection from "./components/hero-section/HeroSection";
 import Projects from "./components/projects/index";
-import Skills from "./components/skills/page";
+import Skills from "./components/skills/Skills";
 import SectionReveal from "./components/SectionReveal";
 
 import "./css/card.css";
 import { Analytics } from "@vercel/analytics/next";
-export default function Home() {
+import {
+  getHero,
+  getSocialLinks,
+  getProfile,
+  getExperiences,
+  getSkillsGrouped,
+  getFeaturedProjects,
+  getSettings,
+} from "@/lib/queries";
+
+export default async function Home() {
+  const [hero, socials, profile, experiences, grouped, featured, settings] =
+    await Promise.all([
+      getHero(),
+      getSocialLinks(),
+      getProfile(),
+      getExperiences(),
+      getSkillsGrouped(),
+      getFeaturedProjects(3),
+      getSettings(),
+    ]);
+
   return (
     <>
       <div className="container">
-        <HeroSection />
+        <HeroSection hero={hero} socials={socials} />
 
         <SectionReveal>
-          <About />
+          <About profile={profile} />
         </SectionReveal>
 
         <SectionReveal>
-          <Experience />
+          <Experience experiences={experiences} />
         </SectionReveal>
 
         <SectionReveal>
-          <Skills />
+          <Skills grouped={grouped} />
         </SectionReveal>
 
         <SectionReveal>
-          <Projects />
+          <Projects projects={featured} />
         </SectionReveal>
 
         <SectionReveal>
-          <Contact />
+          <Contact settings={settings} socials={socials} />
         </SectionReveal>
       </div>
       <Analytics />

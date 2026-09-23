@@ -6,6 +6,14 @@ import {
 /** @type {import("next").NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https" as const,
+        hostname: "*.public.blob.vercel-storage.com",
+      },
+    ],
+  },
 };
 
 const nextConfigFunction = async (phase: string) => {

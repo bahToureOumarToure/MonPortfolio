@@ -1,5 +1,4 @@
 "use client";
-import { personalData } from "@/../utils/Data/PersonalData";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/all";
@@ -7,8 +6,9 @@ import { SplitText } from "gsap/dist/SplitText";
 import Image from "next/image";
 import Tilt from "react-parallax-tilt";
 import { User, Sparkles } from "lucide-react";
+import type { ProfileVM } from "@/lib/content-types";
 
-function About() {
+function About({ profile }: { profile: ProfileVM }) {
   useGSAP(() => {
     gsap.registerPlugin(SplitText, ScrollTrigger);
 
@@ -68,9 +68,9 @@ function About() {
                 </span>
               </div>
               <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
-                About{" "}
+                {profile.aboutTitle}{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800">
-                  The Software Engineer
+                  {profile.aboutHighlight}
                 </span>
               </h2>
             </div>
@@ -81,7 +81,7 @@ function About() {
               </div>
 
               <div className="about-description text-slate-300 text-lg lg:text-xl leading-relaxed text-justify space-y-4 font-medium italic">
-                {personalData.description}
+                {profile.description}
               </div>
 
               {/* Decorative Accent */}
@@ -125,9 +125,9 @@ function About() {
 
                 <div className="relative aspect-[4/5] rounded-2xl overflow-hidden border-2 border-white/10 shadow-[0_0_50px_rgba(239,68,68,0.15)] bg-[#050505]">
                   <Image
-                    src={personalData.profile}
+                    src={profile.image}
                     fill
-                    alt={personalData.name}
+                    alt={profile.name}
                     className="object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110"
                     sizes="(max-width: 768px) 100vw, 50vw"
                     priority

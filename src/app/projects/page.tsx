@@ -1,7 +1,8 @@
-import { projectsData } from "@/../utils/Data/projects-data";
 import ProjectCard from "@/app/components/projects/project-card";
+import { getProjects } from "@/lib/queries";
 
-const ProjectsPage = () => {
+const ProjectsPage = async () => {
+  const projects = await getProjects();
   return (
     <section id="projects" className="relative min-h-screen  overflow-hidden">
       {/* Background Decorative Elements */}
@@ -23,7 +24,7 @@ const ProjectsPage = () => {
         </div>
 
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 w-full">
-          {projectsData.map((project) => (
+          {projects.map((project) => (
             <div key={project.id} className="h-full">
               <ProjectCard project={project} />
             </div>
