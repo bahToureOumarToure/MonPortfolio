@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
-import { getTheme } from "@/lib/queries";
+import { getSettings, getTheme } from "@/lib/queries";
 import { SYSTEM_MODE_SCRIPT, themeCss } from "@/lib/theme";
 
 const geistSans = localFont({
@@ -34,7 +34,7 @@ export async function generateViewport(): Promise<Viewport> {
   return { themeColor: LIGHT_BG, colorScheme: "light" };
 }
 
-export const metadata: Metadata = {
+const BASE_METADATA: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default:
@@ -145,6 +145,21 @@ export const metadata: Metadata = {
     apple: "/Pwa-logos/new-icons/manifest-icon-192.maskable.png",
   },
 };
+
+/** Métadonnées : base SEO soignée + titre/description éditables dans l'admin. */
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSettings();
+  const description =
+    settings.metaDescription || BASE_METADATA.description || undefined;
+  const siteName = settings.siteTitle || "Bah Oumar Touré Portfolio";
+  return {
+    ...BASE_METADATA,
+    description,
+    applicationName: siteName,
+    openGraph: { ...BASE_METADATA.openGraph, siteName, description },
+    twitter: { ...BASE_METADATA.twitter, description },
+  };
+}
 
 const jsonLd = {
   "@context": "https://schema.org",

@@ -18,7 +18,9 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "db:sync": "node scripts/db-sync.mjs --strict"
+    "db:sync": "node scripts/db-sync.mjs --strict",
+    "test:e2e": "playwright test",
+    "e2e:admin": "node scripts/e2e-admin.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -50,6 +52,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",

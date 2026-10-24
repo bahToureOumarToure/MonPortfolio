@@ -81,7 +81,7 @@ export default function SettingsForm({
           <Field
             label="Titre du site"
             htmlFor="st-title"
-            hint="Titre affiché dans l'onglet et les résultats Google."
+            hint="Nom du site affiché dans les aperçus de partage (LinkedIn, WhatsApp…)."
           >
             <Input
               id="st-title"

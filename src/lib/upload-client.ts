@@ -166,9 +166,13 @@ export async function uploadFile(
         "L'upload a expiré (aucune progression). Vérifie ta connexion et que le stockage est configuré (BLOB_READ_WRITE_TOKEN).",
       );
     }
-    throw new Error(
-      err instanceof Error && err.message ? err.message : "Échec de l'upload.",
-    );
+    const message = err instanceof Error ? err.message : "";
+    if (/client token/i.test(message)) {
+      throw new Error(
+        "Le serveur a refusé l'envoi : session expirée ou stockage non configuré (BLOB_READ_WRITE_TOKEN).",
+      );
+    }
+    throw new Error(message || "Échec de l'upload.");
   } finally {
     if (timer) clearTimeout(timer);
   }

@@ -23,12 +23,13 @@ env:
   DIRECT_URL: postgresql://postgres:postgres@localhost:5432/portfolio
   AUTH_SECRET: ci-only-secret-not-used-in-production
   ADMIN_EMAIL: ci@example.com
+  E2E_ADMIN_PASSWORD: ci-e2e-password-not-secret
 
 jobs:
   quality:
-    name: Lint · Typecheck · Build
+    name: Lint · Typecheck · Build · E2E
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     services:
       postgres:
@@ -89,3 +90,25 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Compte admin de test
+        run: node scripts/e2e-admin.mjs
+
+      - name: Navigateur Playwright
+        run: npx playwright install --with-deps chromium
+
+      # Parcours réels sur le build de prod : site public (thème clair par
+      # défaut, mobile, projets, contact, SEO) et admin (connexion, CRUD,
+      # validation, thème, uploads).
+      - name: Tests de bout en bout
+        run: npm run test:e2e
+
+      - name: Rapport e2e (en cas d'échec)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7

@@ -1,108 +1,130 @@
-# Bah Oumar Touré-Portfolio
+# Bah Oumar Touré — Portfolio
 
-Personal developer portfolio built with **Next.js 15**, **React 19**, **Tailwind CSS 3**, and modern web tooling. Showcases my journey, skills, and projects in a responsive, animated UI.
+Portfolio personnel avec CMS intégré : un site public **clair, simple et rapide** et un
+espace d'administration privé pour tout modifier sans toucher au code (textes, projets,
+compétences, médias, CV… et l'apparence du site).
 
----
-
-## Live Demo
-
-[https://mon-portfolio-rho-liard.vercel.app](https://mon-portfolio-rho-liard.vercel.app)
+**En ligne :** [www.bahoumartoure.com](https://www.bahoumartoure.com)
 
 ---
 
-## Tech Stack
+## Stack
 
-- **Framework**: [Next.js 15](https://nextjs.org/)
-- **Styling**: [Tailwind CSS 3](https://tailwindcss.com/)
-- **Language**: TypeScript -fully typed components and utilities
-- **Animations**: [GSAP](https://gsap.com/) + [Lottie React](https://www.npmjs.com/package/lottie-react)
-- **Contact**: [EmailJS](https://www.emailjs.com/) integration
-- **PWA**: [`@ducanh2912/next-pwa`](https://www.npmjs.com/package/@ducanh2912/next-pwa)
-- **Icons**: [Lucide](https://lucide.dev/), [React Icons](https://react-icons.github.io/)
-- **Code quality**: Prettier, ESLint 9 (flat config), Husky pre-commit hooks
+| Domaine     | Choix                                                                |
+| ----------- | -------------------------------------------------------------------- |
+| Framework   | Next.js 15 (App Router, Server Actions), React 18, TypeScript strict |
+| Style       | Tailwind CSS 3 + design system à tokens CSS (`src/app/globals.css`)  |
+| Données     | PostgreSQL (Vercel Postgres / Neon) via Prisma 6                     |
+| Médias      | Vercel Blob (upload direct navigateur → Blob)                        |
+| Auth admin  | Passkeys (WebAuthn) ou mot de passe + 2FA TOTP, sessions révocables  |
+| Contact     | EmailJS                                                              |
+| Qualité     | ESLint, TypeScript, Prettier (husky + lint-staged), Playwright (e2e) |
+| Hébergement | Vercel (+ Analytics / Speed Insights), PWA                           |
 
----
+## Fonctionnalités
 
-## Folder Structure
+**Site public** — accueil (hero, à propos, parcours, compétences, projets, contact),
+liste des projets filtrable par technologie, page détail par projet, 404, SEO
+(métadonnées, JSON-LD, `robots.txt`, `sitemap.xml`), responsive et accessible
+(navigation clavier, lecteurs d'écran, `prefers-reduced-motion`).
+
+**Admin (`/admin`)** — tableau de bord, Profil & Hero, Projets (ordre, mise en avant,
+visibilité), Compétences, Expérience, Formation, Liens sociaux, Médias, Apparence,
+Paramètres & CV, Sécurité. Chaque modification est en ligne immédiatement.
+
+**Apparence** — mode **Clair (par défaut)** / Sombre / Automatique, couleur d'accent
+(10 teintes prêtes ou couleur libre), arrondis, aperçu en direct. Tout le site et
+l'admin suivent ces réglages.
+
+**Uploads** — glisser-déposer, envoi multiple avec progression par fichier, validation
+avant envoi, redimensionnement + conversion WebP automatiques des photos lourdes,
+texte alternatif, recherche, « Utiliser pour… » (profil, hero, couverture de projet).
+
+## Structure
 
 ```
-portfolio_obtoure/
-├── public/                  # Static assets, Lottie files, images, PWA icons
-├── src/
-│   ├── app/
-│   │   ├── components/      # Reusable UI sections (Hero, About, Skills, etc.)
-│   │   ├── projects/        # Project detail and listing pages
-│   │   ├── css/             # Custom CSS (glow card effects)
-│   │   └── fonts/           # Local fonts (Geist)
-│   ├── components/ui/       # Shadcn UI primitives (Button, Card, Carousel…)
-│   ├── Types/               # Shared TypeScript types
-│   └── lib/                 # Utility functions (cn, etc.)
-├── utils/                   # Data files (PersonalData, projects, skills…)
-├── .husky/                  # Git pre-commit hook
-├── eslint.config.mjs        # ESLint 9 flat config
-├── tailwind.config.ts       # Tailwind theme configuration
-└── next.config.ts           # Next.js + PWA configuration
+prisma/
+  schema.prisma        # modèle de données
+  sql/                 # migrations ADDITIVES appliquées au build (voir plus bas)
+  seed.ts              # import du contenu initial
+scripts/
+  db-sync.mjs          # applique prisma/sql/*.sql (build Vercel / npm run db:sync)
+  e2e-admin.mjs        # compte admin des tests e2e (base de test uniquement)
+e2e/                   # tests Playwright (site public + admin)
+src/
+  app/
+    (site)/            # pages publiques (layout avec navbar/footer)
+    admin/             # espace d'administration
+    api/admin/         # auth, passkeys, upload
+    globals.css        # tokens du design system
+  components/
+    ui/                # primitives (Button, Badge, Card, Input…)
+    site/              # sections du site public
+    admin/             # écrans et kit de l'admin
+  lib/
+    actions/           # Server Actions (retour { ok, data | error })
+    validation/        # schémas Zod (messages en français)
+    queries.ts         # lectures publiques mises en cache (+ repli sans base)
+    theme.ts           # thème : tokens, presets, contrastes
+utils/                 # contenu de repli et registres d'icônes
 ```
 
----
-
-## Getting Started
-
-### 1. Clone the repository
+## Démarrer en local
 
 ```bash
-git clone https://github.com/bahToureOumarToure/portfolio_obtoure.git
-cd portfolio_obtoure
-```
-
-### 2. Install dependencies
-
-```bash
-pnpm install
-# or
 npm install
+cp example.env .env.local      # puis renseigner les variables
+npm run db:push                # crée les tables
+npm run db:seed                # importe le contenu initial
+npm run dev                    # http://localhost:3000
 ```
 
-### 3. Configure environment variables
+Premier accès admin : ouvrir `/admin/setup` (compte = `ADMIN_EMAIL`).
 
-Copy the example file and fill in your EmailJS credentials:
+### Scripts utiles
 
-```bash
-cp example.env .env.local
-```
+| Commande            | Rôle                                              |
+| ------------------- | ------------------------------------------------- |
+| `npm run check`     | lint + typecheck                                  |
+| `npm run build`     | build de production (inclut `db-sync` sur Vercel) |
+| `npm run test:e2e`  | tests Playwright sur le build (`next start`)      |
+| `npm run db:sync`   | applique les migrations additives `prisma/sql`    |
+| `npm run db:studio` | explorer la base                                  |
 
-```env
-NEXT_PUBLIC_EMAILJS_SERVICE_ID=
-NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=
-NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=
-```
+## CI/CD — livrer sans casser la prod
 
-### 4. Start the development server
+1. Chaque push (toutes branches) et chaque PR vers `main` passe par
+   **GitHub Actions** (`.github/workflows/ci.yml`) :
+   lint → typecheck → **simulation de mise à jour de la base de prod** →
+   base de test seedée → build de production → **tests e2e Playwright**.
+2. Vercel crée un **déploiement de preview** par branche ; seul `main` part en production.
+3. On ne merge dans `main` que lorsque la CI est verte.
 
-```bash
-pnpm dev
-```
+### Évolutions de la base de données
 
-Then visit: [http://localhost:3000](http://localhost:3000)
+Le schéma n'utilise pas `prisma migrate` : les évolutions passent par des fichiers SQL
+**additifs et idempotents** dans `prisma/sql/` (`CREATE TABLE IF NOT EXISTS`, ajout de
+colonne avec valeur par défaut…). Ils sont appliqués automatiquement au build Vercel
+par `scripts/db-sync.mjs`, avant `next build`.
 
----
+- Un échec n'interrompt pas le déploiement : le code garde un repli (ex. thème clair
+  par défaut si la table du thème n'existe pas).
+- En CI, une base est reconstruite **au schéma de `main`**, les migrations y sont
+  rejouées, puis `prisma migrate diff --exit-code` exige zéro écart avec le nouveau
+  schéma : un changement de schéma sans migration additive fait échouer la CI.
+- `SKIP_DB_SYNC=1` désactive l'étape si besoin.
 
-## Deployment
+Pour faire évoluer le schéma : modifier `schema.prisma`, générer le SQL avec
+`npx prisma migrate diff --from-schema-datamodel <ancien> --to-schema-datamodel prisma/schema.prisma --script`,
+le rendre idempotent et l'ajouter sous `prisma/sql/NNN_description.sql`.
 
-The project is deployed on [Vercel](https://vercel.com). Any push to `main` triggers an automatic production deployment.
+## Variables d'environnement
 
----
-
-## License
-
-This project is open-source and available under the [MIT License](LICENSE).
-
----
+Voir [`example.env`](example.env) : EmailJS, `DATABASE_URL` / `DIRECT_URL`,
+`AUTH_SECRET`, WebAuthn, `BLOB_READ_WRITE_TOKEN`, `ADMIN_EMAIL`.
 
 ## Contact
 
-Have a project in mind or just want to say hi?
-
-- Email: [o.t.bahtoure@gmail.com](mailto:o.t.bahtoure@gmail.com)
-- LinkedIn: [linkedin.com/in/bahoumartoure](https://www.linkedin.com/in/bahoumartoure)
-- GitHub: [github.com/bahToureOumarToure](https://github.com/bahToureOumarToure)
+- Email : [o.t.bahtoure@gmail.com](mailto:o.t.bahtoure@gmail.com)
+- LinkedIn : [linkedin.com/in/bahoumartoure](https://www.linkedin.com/in/bahoumartoure)
+- GitHub : [github.com/bahToureOumarToure](https://github.com/bahToureOumarToure)
