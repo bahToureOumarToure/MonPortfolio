@@ -2,7 +2,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { startAuthentication } from "@simplewebauthn/browser";
-import { KeyRound, Lock, LoaderCircle } from "lucide-react";
+import { KeyRound, LoaderCircle } from "lucide-react";
+import AuthCard from "@/components/admin/AuthCard";
+import { Button } from "@/components/ui/button";
+import { Input, Label } from "@/components/ui/input";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -79,83 +82,73 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-3xl p-8 lg:p-10 shadow-2xl">
-        <div className="flex flex-col gap-2 mb-8">
-          <h1 className="text-2xl font-black tracking-tight">
-            Espace <span className="text-red-500">admin</span>
-          </h1>
-          <p className="text-sm text-slate-400">Accès strictement privé.</p>
+    <AuthCard title="Espace admin" subtitle="Accès strictement privé.">
+      <Button
+        onClick={passkeyLogin}
+        disabled={loading !== ""}
+        size="lg"
+        className="w-full"
+      >
+        {loading === "passkey" ? (
+          <LoaderCircle className="animate-spin" />
+        ) : (
+          <KeyRound />
+        )}
+        Se connecter avec une passkey
+      </Button>
+
+      <div className="my-6 flex items-center gap-4">
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-xs text-muted-foreground">ou</span>
+        <span className="h-px flex-1 bg-border" />
+      </div>
+
+      <form onSubmit={passwordLogin} className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="login-password">Mot de passe</Label>
+          <Input
+            id="login-password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+          />
         </div>
 
-        <button
-          onClick={passkeyLogin}
-          disabled={loading !== ""}
-          className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-red-600 to-red-900 text-white font-bold text-sm uppercase tracking-widest disabled:opacity-50 hover:scale-[1.02] transition-transform"
-        >
-          {loading === "passkey" ? (
-            <LoaderCircle className="w-5 h-5 animate-spin" />
-          ) : (
-            <KeyRound className="w-5 h-5" />
-          )}
-          Se connecter avec une passkey
-        </button>
-
-        <div className="flex items-center gap-4 my-6">
-          <span className="flex-1 h-px bg-white/10" />
-          <span className="text-xs uppercase tracking-widest text-slate-600">
-            ou
-          </span>
-          <span className="flex-1 h-px bg-white/10" />
-        </div>
-
-        <form onSubmit={passwordLogin} className="flex flex-col gap-4">
+        {needsTotp && (
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-              <Lock className="w-3.5 h-3.5" /> Mot de passe
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-red-500/50"
-              required
+            <Label htmlFor="login-totp">Code 2FA</Label>
+            <Input
+              id="login-totp"
+              inputMode="numeric"
+              value={totp}
+              onChange={(e) => setTotp(e.target.value)}
+              placeholder="123456"
+              autoComplete="one-time-code"
+              autoFocus
+              className="font-mono tracking-[0.4em]"
             />
           </div>
-
-          {needsTotp && (
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                Code 2FA
-              </label>
-              <input
-                inputMode="numeric"
-                value={totp}
-                onChange={(e) => setTotp(e.target.value)}
-                placeholder="123456"
-                autoComplete="one-time-code"
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white tracking-[0.4em] outline-none focus:border-red-500/50"
-              />
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading !== ""}
-            className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-sm uppercase tracking-widest disabled:opacity-50 transition-colors"
-          >
-            {loading === "pass" ? (
-              <LoaderCircle className="w-5 h-5 animate-spin" />
-            ) : null}
-            Se connecter
-          </button>
-        </form>
-
-        {error && (
-          <p className="mt-5 text-sm text-red-400 text-center">{error}</p>
         )}
-      </div>
-    </div>
+
+        <Button
+          type="submit"
+          variant="outline"
+          size="lg"
+          disabled={loading !== ""}
+          className="w-full"
+        >
+          {loading === "pass" && <LoaderCircle className="animate-spin" />}
+          Se connecter
+        </Button>
+      </form>
+
+      {error && (
+        <p role="alert" className="mt-5 text-center text-sm text-destructive">
+          {error}
+        </p>
+      )}
+    </AuthCard>
   );
 }

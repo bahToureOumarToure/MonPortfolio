@@ -1,51 +1,104 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  LayoutDashboard,
-  FolderGit2,
-  Cpu,
-  UserRound,
   Briefcase,
-  Link2,
+  Cpu,
+  ExternalLink,
+  FolderGit2,
+  GraduationCap,
   Images,
+  LayoutDashboard,
+  Link2,
+  LogOut,
+  Menu,
+  Palette,
   Settings,
   ShieldCheck,
-  LogOut,
+  UserRound,
+  X,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/site/logo";
 
-const items = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, ready: true },
+const GROUPS = [
   {
-    href: "/admin/security",
-    label: "Sécurité",
-    icon: ShieldCheck,
-    ready: true,
+    label: null,
+    items: [
+      { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard },
+    ],
   },
-  { href: "/admin/projects", label: "Projets", icon: FolderGit2, ready: true },
-  { href: "/admin/skills", label: "Compétences", icon: Cpu, ready: true },
   {
-    href: "/admin/profile",
-    label: "Profil / Hero",
-    icon: UserRound,
-    ready: true,
+    label: "Contenu",
+    items: [
+      { href: "/admin/profile", label: "Profil & Hero", icon: UserRound },
+      { href: "/admin/projects", label: "Projets", icon: FolderGit2 },
+      { href: "/admin/skills", label: "Compétences", icon: Cpu },
+      { href: "/admin/experience", label: "Expérience", icon: Briefcase },
+      { href: "/admin/education", label: "Formation", icon: GraduationCap },
+      { href: "/admin/socials", label: "Liens sociaux", icon: Link2 },
+      { href: "/admin/media", label: "Médias", icon: Images },
+    ],
   },
-  { href: "/admin/experience", label: "Stage", icon: Briefcase, ready: true },
-  { href: "/admin/socials", label: "Liens sociaux", icon: Link2, ready: true },
-  { href: "/admin/media", label: "Médias", icon: Images, ready: true },
   {
-    href: "/admin/settings",
-    label: "Paramètres",
-    icon: Settings,
-    ready: true,
+    label: "Site",
+    items: [
+      { href: "/admin/appearance", label: "Apparence", icon: Palette },
+      { href: "/admin/settings", label: "Paramètres & CV", icon: Settings },
+      { href: "/admin/security", label: "Sécurité", icon: ShieldCheck },
+    ],
   },
 ];
 
-export default function AdminNav({ email }: { email: string }) {
+function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  return (
+    <nav aria-label="Navigation admin" className="flex flex-col gap-5">
+      {GROUPS.map((group, gi) => (
+        <div key={gi} className="flex flex-col gap-0.5">
+          {group.label && (
+            <p className="mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              {group.label}
+            </p>
+          )}
+          {group.items.map((item) => {
+            const active =
+              pathname === item.href ||
+              (item.href !== "/admin" && pathname.startsWith(item.href));
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onNavigate}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                  active
+                    ? "bg-primary/10 font-medium text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      ))}
+    </nav>
+  );
+}
+
+export default function AdminNav({ email }: { email: string }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => setOpen(false), [pathname]);
 
   async function logout() {
     setLoggingOut(true);
@@ -58,65 +111,102 @@ export default function AdminNav({ email }: { email: string }) {
     }
   }
 
+  const footer = (
+    <div className="flex flex-col gap-1 border-t p-3">
+      <a
+        href="/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <ExternalLink className="h-4 w-4" /> Voir le site
+      </a>
+      <button
+        type="button"
+        onClick={logout}
+        disabled={loggingOut}
+        className="flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+      >
+        <LogOut className="h-4 w-4" />
+        {loggingOut ? "Déconnexion…" : "Se déconnecter"}
+      </button>
+      <p
+        className="truncate px-3 pt-2 text-xs text-muted-foreground"
+        title={email}
+      >
+        {email}
+      </p>
+    </div>
+  );
+
   return (
-    <aside className="w-64 shrink-0 border-r border-white/10 bg-[#0a0a0a] flex flex-col min-h-screen sticky top-0">
-      <div className="p-6 border-b border-white/10">
-        <p className="text-lg font-black text-white tracking-tight">
-          Admin<span className="text-red-500">.</span>
-        </p>
-        <p className="text-xs text-slate-500 truncate mt-1">{email}</p>
-      </div>
-
-      <nav className="flex-1 p-3 flex flex-col gap-1 overflow-y-auto">
-        {items.map((item) => {
-          const active =
-            pathname === item.href ||
-            (item.href !== "/admin" && pathname.startsWith(item.href));
-          const Icon = item.icon;
-          const base =
-            "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all";
-          if (!item.ready) {
-            return (
-              <span
-                key={item.href}
-                className={`${base} text-slate-600 cursor-not-allowed`}
-                title="Bientôt disponible"
-              >
-                <Icon className="w-4 h-4" />
-                {item.label}
-                <span className="ml-auto text-[9px] uppercase tracking-widest text-slate-700">
-                  bientôt
-                </span>
-              </span>
-            );
-          }
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`${base} ${
-                active
-                  ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                  : "text-slate-300 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="p-3 border-t border-white/10">
-        <button
-          onClick={logout}
-          disabled={loggingOut}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-red-500/10 hover:text-red-400 transition-all disabled:opacity-50"
+    <>
+      {/* Barre supérieure mobile */}
+      <div className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/90 px-4 backdrop-blur lg:hidden">
+        <Link
+          href="/admin"
+          className="flex items-center gap-2 text-sm font-semibold"
         >
-          <LogOut className="w-4 h-4" />
-          {loggingOut ? "Déconnexion…" : "Se déconnecter"}
-        </button>
+          <Logo className="h-7 w-[17px]" /> Admin
+        </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open ? <X /> : <Menu />}
+        </Button>
       </div>
-    </aside>
+
+      {/* Tiroir mobile */}
+      {open && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            aria-label="Fermer le menu"
+            className="absolute inset-0 bg-foreground/20 backdrop-blur-[2px]"
+            onClick={() => setOpen(false)}
+          />
+          <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] animate-in slide-in-from-left flex-col border-r bg-background shadow-xl duration-200">
+            <div className="flex h-14 items-center justify-between border-b px-4">
+              <span className="flex items-center gap-2 text-sm font-semibold">
+                <Logo className="h-7 w-[17px]" /> Admin
+              </span>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Fermer"
+                onClick={() => setOpen(false)}
+              >
+                <X />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3">
+              <NavLinks onNavigate={() => setOpen(false)} />
+            </div>
+            {footer}
+          </aside>
+        </div>
+      )}
+
+      {/* Barre latérale desktop */}
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r bg-background lg:flex">
+        <Link
+          href="/admin"
+          className="flex h-16 items-center gap-2.5 border-b px-5 font-semibold"
+        >
+          <Logo className="h-8 w-[19px]" />
+          <span>
+            Admin<span className="text-primary">.</span>
+          </span>
+        </Link>
+        <div className="flex-1 overflow-y-auto p-3">
+          <NavLinks />
+        </div>
+        {footer}
+      </aside>
+    </>
   );
 }

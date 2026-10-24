@@ -3,7 +3,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircle, Save } from "lucide-react";
 import { createProject, updateProject } from "@/lib/actions/projects";
-import MediaPicker from "@/components/admin/MediaPicker";
+import { Button } from "@/components/ui/button";
+import { Input, Textarea } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import MediaPicker from "./MediaPicker";
+import { Checkbox, Field, Panel } from "./ui";
+import { useAction, useUnsavedWarning } from "./use-action";
 
 export interface ProjectFormValues {
   name: string;
@@ -18,7 +23,6 @@ export interface ProjectFormValues {
   status: string;
   featured: boolean;
   active: boolean;
-  order: number;
   images: string[]; // URLs (la 1re = image principale)
 }
 
@@ -35,7 +39,6 @@ const EMPTY: ProjectFormValues = {
   status: "",
   featured: false,
   active: true,
-  order: 0,
   images: [],
 };
 
@@ -50,11 +53,6 @@ const csv = (s: string) =>
     .map((l) => l.trim())
     .filter(Boolean);
 
-const inputCls =
-  "bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-600 outline-none focus:border-red-500/50 w-full";
-const labelCls =
-  "text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 block";
-
 export default function ProjectForm({
   projectId,
   initial,
@@ -63,218 +61,207 @@ export default function ProjectForm({
   initial?: ProjectFormValues;
 }) {
   const router = useRouter();
-  const [v, setV] = useState<ProjectFormValues>(initial ?? EMPTY);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const start = initial ?? EMPTY;
+  const [v, setV] = useState<ProjectFormValues>(start);
+  const [dirty, setDirty] = useState(false);
+  const { pending, execute } = useAction();
+  useUnsavedWarning(dirty && !pending);
 
   function set<K extends keyof ProjectFormValues>(
     k: K,
     val: ProjectFormValues[K],
   ) {
     setV((prev) => ({ ...prev, [k]: val }));
+    setDirty(true);
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
-    setError(null);
     const payload = {
-      name: v.name,
-      description: v.description,
-      role: v.role,
+      ...v,
       tools: csv(v.tools),
       highlights: lines(v.highlights),
       challenges: lines(v.challenges),
       codeUrl: v.codeUrl.trim(),
       demoUrl: v.demoUrl.trim(),
-      date: v.date,
-      status: v.status,
-      featured: v.featured,
-      active: v.active,
-      order: Number(v.order) || 0,
-      images: v.images,
     };
-    try {
-      if (projectId) await updateProject(projectId, payload);
-      else await createProject(payload);
+    const res = await execute(
+      () =>
+        projectId ? updateProject(projectId, payload) : createProject(payload),
+      {
+        success: projectId ? "Projet enregistré." : "Projet créé.",
+        refresh: false,
+      },
+    );
+    if (res.ok) {
+      setDirty(false);
       router.push("/admin/projects");
       router.refresh();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Échec de l'enregistrement.",
-      );
-      setSaving(false);
     }
   }
 
+  const tools = csv(v.tools);
+
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5 max-w-3xl">
-      <div>
-        <label className={labelCls}>Nom</label>
-        <input
-          className={inputCls}
-          value={v.name}
-          onChange={(e) => set("name", e.target.value)}
-          required
-        />
-      </div>
-
-      <div>
-        <label className={labelCls}>Description</label>
-        <textarea
-          className={inputCls}
-          rows={4}
-          value={v.description}
-          onChange={(e) => set("description", e.target.value)}
-          required
-        />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className={labelCls}>Rôle</label>
-          <input
-            className={inputCls}
-            value={v.role}
-            onChange={(e) => set("role", e.target.value)}
-          />
+    <form onSubmit={submit} className="flex flex-col gap-6">
+      <Panel title="Informations">
+        <div className="grid gap-5">
+          <Field label="Nom du projet" htmlFor="p-name">
+            <Input
+              id="p-name"
+              value={v.name}
+              onChange={(e) => set("name", e.target.value)}
+              required
+              maxLength={200}
+            />
+          </Field>
+          <Field
+            label="Description"
+            htmlFor="p-desc"
+            hint="Affichée sur la carte (3 lignes) et en entier sur la page du projet."
+          >
+            <Textarea
+              id="p-desc"
+              rows={4}
+              value={v.description}
+              onChange={(e) => set("description", e.target.value)}
+              required
+              maxLength={4000}
+            />
+          </Field>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Rôle" htmlFor="p-role">
+              <Input
+                id="p-role"
+                value={v.role}
+                onChange={(e) => set("role", e.target.value)}
+                placeholder="Full-Stack Developer"
+              />
+            </Field>
+            <Field
+              label="Date"
+              htmlFor="p-date"
+              hint="Format AAAA-MM-JJ pour un affichage « mois année »."
+            >
+              <Input
+                id="p-date"
+                value={v.date}
+                onChange={(e) => set("date", e.target.value)}
+                placeholder="2025-12-20"
+              />
+            </Field>
+          </div>
+          <Field
+            label="Technologies"
+            htmlFor="p-tools"
+            hint="Séparées par des virgules."
+          >
+            <Input
+              id="p-tools"
+              value={v.tools}
+              onChange={(e) => set("tools", e.target.value)}
+              placeholder="Spring Boot, React, Docker"
+            />
+          </Field>
+          {tools.length > 0 && (
+            <div className="-mt-2 flex flex-wrap gap-1.5">
+              {tools.map((t) => (
+                <Badge key={t} variant="secondary" className="font-normal">
+                  {t}
+                </Badge>
+              ))}
+            </div>
+          )}
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Lien du code (GitHub)" htmlFor="p-code">
+              <Input
+                id="p-code"
+                type="url"
+                value={v.codeUrl}
+                onChange={(e) => set("codeUrl", e.target.value)}
+                placeholder="https://github.com/…"
+              />
+            </Field>
+            <Field label="Lien de la démo" htmlFor="p-demo">
+              <Input
+                id="p-demo"
+                type="url"
+                value={v.demoUrl}
+                onChange={(e) => set("demoUrl", e.target.value)}
+                placeholder="https://…"
+              />
+            </Field>
+          </div>
         </div>
-        <div>
-          <label className={labelCls}>Date</label>
-          <input
-            className={inputCls}
-            value={v.date}
-            onChange={(e) => set("date", e.target.value)}
-            placeholder="2025-12-20"
-          />
-        </div>
-      </div>
+      </Panel>
 
-      <div>
-        <label className={labelCls}>
-          Technologies (séparées par des virgules)
-        </label>
-        <input
-          className={inputCls}
-          value={v.tools}
-          onChange={(e) => set("tools", e.target.value)}
-          placeholder="Spring Boot, React, Docker"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className={labelCls}>Lien code (GitHub)</label>
-          <input
-            className={inputCls}
-            value={v.codeUrl}
-            onChange={(e) => set("codeUrl", e.target.value)}
-            placeholder="https://github.com/…"
-          />
-        </div>
-        <div>
-          <label className={labelCls}>Lien démo</label>
-          <input
-            className={inputCls}
-            value={v.demoUrl}
-            onChange={(e) => set("demoUrl", e.target.value)}
-            placeholder="https://…"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className={labelCls}>
-          Images (téléverse ou choisis ; la 1re = image principale)
-        </label>
+      <Panel
+        title="Images"
+        description="La première image est la couverture (format paysage 16:9 conseillé)."
+      >
         <MediaPicker
           multiple
           aspect="video"
           value={v.images}
           onChange={(urls) => set("images", urls as string[])}
         />
-      </div>
+      </Panel>
 
-      <div>
-        <label className={labelCls}>Points forts — un par ligne</label>
-        <textarea
-          className={inputCls}
-          rows={3}
-          value={v.highlights}
-          onChange={(e) => set("highlights", e.target.value)}
-        />
-      </div>
-
-      <div>
-        <label className={labelCls}>Défis — un par ligne</label>
-        <textarea
-          className={inputCls}
-          rows={3}
-          value={v.challenges}
-          onChange={(e) => set("challenges", e.target.value)}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 items-end">
-        <div>
-          <label className={labelCls}>Ordre</label>
-          <input
-            type="number"
-            className={inputCls}
-            value={v.order}
-            onChange={(e) => set("order", Number(e.target.value))}
-          />
+      <Panel title="Détails">
+        <div className="grid gap-5">
+          <Field label="Points forts" htmlFor="p-hl" hint="Un par ligne.">
+            <Textarea
+              id="p-hl"
+              rows={4}
+              value={v.highlights}
+              onChange={(e) => set("highlights", e.target.value)}
+            />
+          </Field>
+          <Field label="Défis relevés" htmlFor="p-ch" hint="Un par ligne.">
+            <Textarea
+              id="p-ch"
+              rows={4}
+              value={v.challenges}
+              onChange={(e) => set("challenges", e.target.value)}
+            />
+          </Field>
         </div>
-        <div>
-          <label className={labelCls}>Statut</label>
-          <input
-            className={inputCls}
-            value={v.status}
-            onChange={(e) => set("status", e.target.value)}
-          />
-        </div>
-        <label className="flex items-center gap-2 text-sm text-slate-300 pb-2.5">
-          <input
-            type="checkbox"
-            checked={v.featured}
-            onChange={(e) => set("featured", e.target.checked)}
-            className="accent-red-500 w-4 h-4"
-          />
-          Mis en avant
-        </label>
-        <label className="flex items-center gap-2 text-sm text-slate-300 pb-2.5">
-          <input
-            type="checkbox"
+      </Panel>
+
+      <Panel title="Publication">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Checkbox
             checked={v.active}
-            onChange={(e) => set("active", e.target.checked)}
-            className="accent-red-500 w-4 h-4"
+            onChange={(c) => set("active", c)}
+            label="Visible sur le site"
+            description="Décoche pour garder le projet en brouillon."
           />
-          Actif (visible)
-        </label>
-      </div>
+          <Checkbox
+            checked={v.featured}
+            onChange={(c) => set("featured", c)}
+            label="Mettre en avant"
+            description="Prioritaire dans la sélection de l'accueil."
+          />
+        </div>
+      </Panel>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
-
-      <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={saving}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-900 text-white font-bold text-sm uppercase tracking-widest disabled:opacity-50 hover:scale-[1.02] transition-transform"
-        >
-          {saving ? (
-            <LoaderCircle className="w-4 h-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
-          Enregistrer
-        </button>
-        <button
+      <div className="sticky bottom-0 -mx-4 flex items-center justify-end gap-3 border-t bg-background/90 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:mx-0 lg:rounded-xl lg:border">
+        {dirty && (
+          <span className="mr-auto text-xs text-muted-foreground">
+            Modifications non enregistrées
+          </span>
+        )}
+        <Button
           type="button"
+          variant="outline"
           onClick={() => router.push("/admin/projects")}
-          className="px-6 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 font-bold text-sm uppercase tracking-widest"
         >
           Annuler
-        </button>
+        </Button>
+        <Button type="submit" disabled={pending}>
+          {pending ? <LoaderCircle className="animate-spin" /> : <Save />}
+          Enregistrer
+        </Button>
       </div>
     </form>
   );

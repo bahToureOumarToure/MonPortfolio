@@ -5,7 +5,13 @@ import { getSessionUser } from "@/lib/auth/session";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+const IMAGE_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+];
 const DOC_TYPES = ["application/pdf"];
 const MB = 1024 * 1024;
 

@@ -1,11 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import Script from "next/script";
 import "./globals.css";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import ScrollToTopButton from "@/../utils/ScrollToTopButton";
-import { getSettings, getSocialLinks } from "@/lib/queries";
+import { SITE_URL } from "@/lib/site";
+import { getSettings, getTheme } from "@/lib/queries";
+import { SYSTEM_MODE_SCRIPT, themeCss } from "@/lib/theme";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -18,9 +16,25 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-const SITE_URL = "https://www.bahoumartoure.com";
+const LIGHT_BG = "#ffffff";
+const DARK_BG = "#09090b";
 
-export const metadata: Metadata = {
+export async function generateViewport(): Promise<Viewport> {
+  const { mode } = await getTheme();
+  if (mode === "dark") return { themeColor: DARK_BG, colorScheme: "dark" };
+  if (mode === "system") {
+    return {
+      themeColor: [
+        { media: "(prefers-color-scheme: light)", color: LIGHT_BG },
+        { media: "(prefers-color-scheme: dark)", color: DARK_BG },
+      ],
+      colorScheme: "light dark",
+    };
+  }
+  return { themeColor: LIGHT_BG, colorScheme: "light" };
+}
+
+const BASE_METADATA: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default:
@@ -97,8 +111,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/Website-overview.png",
-        width: 1200,
-        height: 630,
+        width: 1031,
+        height: 1024,
         alt: "Portfolio de Bah Oumar Touré - Junior Developer IA, Data, DevOps & Full-Stack",
       },
     ],
@@ -131,6 +145,21 @@ export const metadata: Metadata = {
     apple: "/Pwa-logos/new-icons/manifest-icon-192.maskable.png",
   },
 };
+
+/** Métadonnées : base SEO soignée + titre/description éditables dans l'admin. */
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSettings();
+  const description =
+    settings.metaDescription || BASE_METADATA.description || undefined;
+  const siteName = settings.siteTitle || "Bah Oumar Touré Portfolio";
+  return {
+    ...BASE_METADATA,
+    description,
+    applicationName: siteName,
+    openGraph: { ...BASE_METADATA.openGraph, siteName, description },
+    twitter: { ...BASE_METADATA.twitter, description },
+  };
+}
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -209,10 +238,6 @@ const jsonLd = {
     { "@type": "Language", name: "Arabe (Darija)", alternateName: "ar" },
     { "@type": "Language", name: "Anglais", alternateName: "en" },
   ],
-  seeks: {
-    "@type": "Demande",
-    name: "Stage de Fin d'Année (PFA) - IA, Data, DevOps ou Full-Stack",
-  },
   address: {
     "@type": "PostalAddress",
     addressLocality: "Berkane / Oujda",
@@ -229,29 +254,31 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [settings, socials] = await Promise.all([
-    getSettings(),
-    getSocialLinks(),
-  ]);
+  const theme = await getTheme();
+  const fonts = `${geistSans.variable} ${geistMono.variable}`;
 
   return (
-    <html lang="fr">
+    <html
+      lang="fr"
+      className={theme.mode === "dark" ? `${fonts} dark` : fonts}
+      // Le mode « automatique » ajoute .dark côté client avant l'affichage.
+      suppressHydrationWarning={theme.mode === "system"}
+    >
       <head>
-        <Script
-          id="json-ld-person"
+        <style
+          id="theme-tokens"
+          dangerouslySetInnerHTML={{ __html: themeCss(theme) }}
+        />
+        {theme.mode === "system" && (
+          <script dangerouslySetInnerHTML={{ __html: SYSTEM_MODE_SCRIPT }} />
+        )}
+      </head>
+      <body>
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-      </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Navbar />
-        <main className="text-white">
-          <div className="container">{children}</div>
-        </main>
-        <ScrollToTopButton />
-        <Footer settings={settings} socials={socials} />
+        {children}
       </body>
     </html>
   );

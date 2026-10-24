@@ -1,34 +1,46 @@
-import { z } from "zod";
+import { z } from "./zod-fr";
+import { isAllowedImageUrl } from "@/lib/media-format";
 
-const optionalUrl = z
-  .string()
-  .trim()
-  .max(500)
-  .refine((v) => v === "" || /^https?:\/\//.test(v), "URL invalide.")
-  .optional()
-  .default("");
+const optionalUrl = (label: string) =>
+  z
+    .string()
+    .trim()
+    .max(500)
+    .refine(
+      (v) => v === "" || /^https?:\/\//.test(v),
+      `${label} : URL invalide (https://…).`,
+    )
+    .optional()
+    .default("");
 
 export const projectInput = z.object({
   name: z.string().trim().min(1, "Le nom est requis.").max(200),
-  description: z.string().trim().min(1, "La description est requise."),
+  description: z
+    .string()
+    .trim()
+    .min(1, "La description est requise.")
+    .max(4000),
   role: z.string().trim().max(120).default(""),
-  tools: z.array(z.string().trim()).default([]),
-  highlights: z.array(z.string().trim()).default([]),
-  challenges: z.array(z.string().trim()).default([]),
-  codeUrl: optionalUrl,
-  demoUrl: optionalUrl,
+  tools: z.array(z.string().trim().max(60)).max(40).default([]),
+  highlights: z.array(z.string().trim().max(500)).max(20).default([]),
+  challenges: z.array(z.string().trim().max(500)).max(20).default([]),
+  codeUrl: optionalUrl("Lien code"),
+  demoUrl: optionalUrl("Lien démo"),
   date: z.string().trim().max(40).default(""),
   status: z.string().trim().max(80).default(""),
   featured: z.boolean().default(false),
   active: z.boolean().default(true),
-  order: z.coerce.number().int().default(0),
   images: z
     .array(
       z
         .string()
         .trim()
-        .refine((v) => /^(https?:\/\/|\/)/.test(v), "URL/chemin invalide."),
+        .refine(
+          isAllowedImageUrl,
+          "Image : choisis un fichier de la médiathèque.",
+        ),
     )
+    .max(30)
     .default([]),
 });
 

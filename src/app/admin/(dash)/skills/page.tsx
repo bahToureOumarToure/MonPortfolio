@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth/admin";
 import { getAdminSkills } from "@/lib/admin-queries";
 import SkillsManager, { type SkillRow } from "@/components/admin/SkillsManager";
+import { PageHeader } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -18,12 +19,12 @@ export default async function SkillsAdminPage() {
   }));
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight">Compétences</h1>
-        <p className="text-slate-400 mt-1">{rows.length} compétence(s)</p>
-      </div>
+    <>
+      <PageHeader
+        title="Compétences"
+        description={`${rows.length} compétence${rows.length > 1 ? "s" : ""}, regroupées par catégorie sur le site.`}
+      />
       <SkillsManager initial={rows} />
-    </div>
+    </>
   );
 }

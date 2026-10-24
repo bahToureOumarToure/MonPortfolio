@@ -1,30 +1,40 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Upload,
-  Trash2,
-  Copy,
   Check,
+  Copy,
   FileText,
-  LoaderCircle,
-  Wand2,
-  UserRound,
   FolderGit2,
-  X,
+  ImageIcon,
+  LoaderCircle,
+  Pencil,
+  Search,
+  Sparkles,
+  Trash2,
+  UserRound,
+  Wand2,
 } from "lucide-react";
-import { uploadFile } from "@/lib/upload-client";
-import {
-  deleteMedia,
-  assignMedia,
-  type MediaDTO,
-  type AssignTarget,
-} from "@/lib/actions/media";
+import { cn } from "@/lib/utils";
+import { assignMedia, deleteMedia, updateMediaAlt } from "@/lib/actions/media";
+import type { AssignTarget, MediaDTO } from "@/lib/media-dto";
 import {
   SLOT,
-  ratioMismatch,
   describeOrientation,
+  ratioMismatch,
   type SlotAspect,
 } from "@/lib/media-format";
+import { formatBytes } from "@/lib/upload-client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import Dialog from "./Dialog";
+import Thumb from "./Thumb";
+import { DropZone, UploadQueue } from "./DropZone";
+import { EmptyState, Field } from "./ui";
+import { useAction } from "./use-action";
+import { useToast } from "./toaster";
+import { useUploader } from "./use-uploader";
+
+type Filter = "ALL" | "IMAGE" | "DOCUMENT";
 
 export default function MediaLibrary({
   initial,
@@ -34,232 +44,388 @@ export default function MediaLibrary({
   targets: AssignTarget[];
 }) {
   const [items, setItems] = useState<MediaDTO[]>(initial);
-  const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Filter>("ALL");
+  const [query, setQuery] = useState("");
+  const [assignFor, setAssignFor] = useState<MediaDTO | null>(null);
+  const [altFor, setAltFor] = useState<MediaDTO | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
-  const [menuFor, setMenuFor] = useState<string | null>(null);
-  const [assigning, setAssigning] = useState<string | null>(null);
-  const [msg, setMsg] = useState<{
-    id: string;
-    ok: boolean;
-    text: string;
-  } | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const uploader = useUploader("IMAGE");
+  const toast = useToast();
+  const { pending, execute } = useAction();
+  useEffect(() => setItems(initial), [initial]);
 
-  async function onFiles(files: FileList | null) {
-    if (!files || files.length === 0) return;
-    setBusy(true);
-    setError(null);
-    setProgress(0);
-    try {
-      const added: MediaDTO[] = [];
-      for (const file of Array.from(files)) {
-        added.push(
-          await uploadFile(file, "IMAGE", (p) => setProgress(p.percentage)),
-        );
-      }
-      setItems((prev) => [...added, ...prev]);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Échec de l'upload.");
-    } finally {
-      setBusy(false);
-      setProgress(null);
-      if (fileRef.current) fileRef.current.value = "";
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return items.filter(
+      (m) =>
+        (filter === "ALL" || m.kind === filter) &&
+        (!q ||
+          m.filename.toLowerCase().includes(q) ||
+          (m.alt ?? "").toLowerCase().includes(q)),
+    );
+  }, [items, filter, query]);
+
+  async function onFiles(files: File[]) {
+    const added = await uploader.uploadAll(files, (media) =>
+      setItems((prev) => [media, ...prev]),
+    );
+    if (added.length > 0) {
+      toast.success(
+        added.length > 1
+          ? `${added.length} images téléversées.`
+          : "Image téléversée.",
+      );
     }
   }
 
-  async function remove(id: string) {
-    if (!window.confirm("Supprimer ce média ? (il sera retiré partout)"))
+  async function remove(m: MediaDTO) {
+    const warning =
+      m.usage > 0
+        ? `Ce média est utilisé à ${m.usage} endroit${m.usage > 1 ? "s" : ""} du site : il en sera retiré.\n\n`
+        : "";
+    if (
+      !window.confirm(`${warning}Supprimer définitivement « ${m.filename} » ?`)
+    )
       return;
-    setItems((prev) => prev.filter((m) => m.id !== id));
-    await deleteMedia(id);
+    const previous = items;
+    setItems((list) => list.filter((x) => x.id !== m.id));
+    const res = await execute(() => deleteMedia(m.id), {
+      success: "Média supprimé.",
+    });
+    if (!res.ok) setItems(previous);
   }
 
   async function copy(url: string) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(url);
-      setTimeout(() => setCopied(null), 1500);
+      window.setTimeout(() => setCopied(null), 1500);
     } catch {
-      /* clipboard indisponible */
+      toast.error("Copie impossible dans ce navigateur.");
     }
   }
 
-  async function assign(m: MediaDTO, target: string, slot: SlotAspect) {
-    if (ratioMismatch(m.width, m.height, slot)) {
+  const counts = {
+    ALL: items.length,
+    IMAGE: items.filter((m) => m.kind === "IMAGE").length,
+    DOCUMENT: items.filter((m) => m.kind === "DOCUMENT").length,
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3">
+        <DropZone
+          kind="IMAGE"
+          multiple
+          onFiles={onFiles}
+          label="Dépose tes images ici"
+        />
+        <UploadQueue items={uploader.items} onClear={uploader.clearErrors} />
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          role="tablist"
+          aria-label="Type de média"
+          className="inline-flex w-fit rounded-lg border bg-background p-1"
+        >
+          {(
+            [
+              ["ALL", "Tous"],
+              ["IMAGE", "Images"],
+              ["DOCUMENT", "Documents"],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              role="tab"
+              type="button"
+              aria-selected={filter === key}
+              onClick={() => setFilter(key)}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm transition-colors",
+                filter === key
+                  ? "bg-muted font-medium text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {label}{" "}
+              <span className="text-xs text-muted-foreground">
+                {counts[key]}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className="relative sm:w-64">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher…"
+            aria-label="Rechercher un média"
+            className="pl-9"
+          />
+        </div>
+      </div>
+
+      {visible.length === 0 ? (
+        <EmptyState
+          icon={<ImageIcon className="h-8 w-8" />}
+          title={items.length === 0 ? "Aucun média" : "Aucun résultat"}
+          description={
+            items.length === 0
+              ? "Téléverse une première image ci-dessus."
+              : "Essaie un autre filtre ou mot-clé."
+          }
+        />
+      ) : (
+        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {visible.map((m) => (
+            <li
+              key={m.id}
+              className="flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm"
+            >
+              <div className="relative flex aspect-video items-center justify-center border-b bg-muted">
+                {m.kind === "IMAGE" ? (
+                  <Thumb src={m.url} alt={m.alt ?? ""} showMissingLabel />
+                ) : (
+                  <FileText className="h-10 w-10 text-muted-foreground" />
+                )}
+                {m.usage > 0 && (
+                  <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[11px] font-medium shadow-sm">
+                    <Sparkles className="h-3 w-3 text-primary" /> Utilisé
+                    {m.usage > 1 ? ` ×${m.usage}` : ""}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-1 flex-col gap-2 p-3">
+                <div className="min-w-0">
+                  <p
+                    className="truncate text-sm font-medium"
+                    title={m.filename}
+                  >
+                    {m.filename}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {[
+                      m.width && m.height ? `${m.width}×${m.height}` : null,
+                      m.size ? formatBytes(m.size) : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "—"}
+                  </p>
+                </div>
+                {m.kind === "IMAGE" && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setAssignFor(m)}
+                  >
+                    <Wand2 /> Utiliser pour…
+                  </Button>
+                )}
+                <div className="mt-auto flex items-center justify-between">
+                  <div className="flex">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      title="Copier l'URL"
+                      aria-label="Copier l'URL"
+                      onClick={() => copy(m.url)}
+                    >
+                      {copied === m.url ? (
+                        <Check className="text-success" />
+                      ) : (
+                        <Copy />
+                      )}
+                    </Button>
+                    {m.kind === "IMAGE" && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        title="Texte alternatif"
+                        aria-label="Modifier le texte alternatif"
+                        onClick={() => setAltFor(m)}
+                      >
+                        <Pencil />
+                      </Button>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="destructive-ghost"
+                    size="icon-sm"
+                    title="Supprimer"
+                    aria-label={`Supprimer ${m.filename}`}
+                    disabled={pending}
+                    onClick={() => remove(m)}
+                  >
+                    <Trash2 />
+                  </Button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <AssignDialog
+        media={assignFor}
+        targets={targets}
+        onClose={() => setAssignFor(null)}
+      />
+      <AltDialog
+        media={altFor}
+        onClose={() => setAltFor(null)}
+        onSaved={(id, alt) =>
+          setItems((list) => list.map((x) => (x.id === id ? { ...x, alt } : x)))
+        }
+      />
+    </div>
+  );
+}
+
+function AssignDialog({
+  media,
+  targets,
+  onClose,
+}: {
+  media: MediaDTO | null;
+  targets: AssignTarget[];
+  onClose: () => void;
+}) {
+  const { pending, execute } = useAction();
+  const [busyTarget, setBusyTarget] = useState<string | null>(null);
+
+  async function assign(target: string, slot: SlotAspect, label: string) {
+    if (!media) return;
+    if (ratioMismatch(media.width, media.height, slot)) {
       const ok = window.confirm(
-        `Cette image est en ${describeOrientation(m.width, m.height)}. ` +
-          `Elle sera recadrée au format ${SLOT[slot].label} de cet emplacement. Continuer ?`,
+        `Cette image est en ${describeOrientation(media.width, media.height)}. ` +
+          `Elle sera recadrée au format ${SLOT[slot].label}. Continuer ?`,
       );
       if (!ok) return;
     }
-    setAssigning(m.id);
-    setMsg(null);
-    try {
-      await assignMedia(m.id, target);
-      setMsg({ id: m.id, ok: true, text: "Assignée ✓ (visible sur le site)" });
-    } catch (e) {
-      setMsg({
-        id: m.id,
-        ok: false,
-        text: e instanceof Error ? e.message : "Échec.",
-      });
-    } finally {
-      setAssigning(null);
-      setMenuFor(null);
+    setBusyTarget(target);
+    const res = await execute(() => assignMedia(media.id, target), {
+      success: `Image appliquée : ${label}.`,
+    });
+    setBusyTarget(null);
+    if (res.ok) onClose();
+  }
+
+  const options = [
+    {
+      target: "profile",
+      slot: "portrait" as const,
+      label: "Photo de profil",
+      icon: UserRound,
+    },
+    {
+      target: "hero",
+      slot: "wide" as const,
+      label: "Image du hero",
+      icon: ImageIcon,
+    },
+    ...targets.map((t) => ({
+      target: `project:${t.id}`,
+      slot: "video" as const,
+      label: `Couverture — ${t.name}`,
+      icon: FolderGit2,
+    })),
+  ];
+
+  return (
+    <Dialog
+      open={!!media}
+      onClose={onClose}
+      title="Utiliser cette image pour…"
+      description="Le changement est visible immédiatement sur le site."
+    >
+      <ul className="flex flex-col gap-1">
+        {options.map(({ target, slot, label, icon: Icon }) => (
+          <li key={target}>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => assign(target, slot, label)}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted disabled:opacity-60"
+            >
+              {busyTarget === target ? (
+                <LoaderCircle className="h-4 w-4 shrink-0 animate-spin text-primary" />
+              ) : (
+                <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+              )}
+              <span className="min-w-0 flex-1 truncate">{label}</span>
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {SLOT[slot].label}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </Dialog>
+  );
+}
+
+function AltDialog({
+  media,
+  onClose,
+  onSaved,
+}: {
+  media: MediaDTO | null;
+  onClose: () => void;
+  onSaved: (id: string, alt: string) => void;
+}) {
+  const [alt, setAlt] = useState("");
+  const { pending, execute } = useAction();
+  useEffect(() => setAlt(media?.alt ?? ""), [media]);
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (!media) return;
+    const res = await execute(() => updateMediaAlt(media.id, { alt }), {
+      success: "Texte alternatif enregistré.",
+      refresh: false,
+    });
+    if (res.ok) {
+      onSaved(media.id, alt);
+      onClose();
     }
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3">
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
-          multiple
-          className="hidden"
-          onChange={(e) => onFiles(e.target.files)}
-        />
-        <button
-          onClick={() => fileRef.current?.click()}
-          disabled={busy}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-900 text-white font-bold text-sm uppercase tracking-widest disabled:opacity-50 hover:scale-[1.02] transition-transform"
-        >
-          {busy ? (
-            <LoaderCircle className="w-4 h-4 animate-spin" />
-          ) : (
-            <Upload className="w-4 h-4" />
-          )}
-          {busy ? `Téléversement… ${progress ?? 0}%` : "Téléverser des images"}
-        </button>
-        {error && <span className="text-sm text-red-400">{error}</span>}
-      </div>
-
-      {items.length === 0 ? (
-        <p className="text-slate-500 text-sm">Aucun média pour l'instant.</p>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {items.map((m) => (
-            <div
-              key={m.id}
-              className="relative rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden flex flex-col"
-            >
-              <div className="aspect-video bg-[#050505] flex items-center justify-center">
-                {m.kind === "IMAGE" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={m.url}
-                    alt={m.alt ?? m.filename}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <FileText className="w-10 h-10 text-slate-600" />
-                )}
-              </div>
-              <div className="p-3 flex flex-col gap-2">
-                <p
-                  className="text-xs text-slate-400 truncate"
-                  title={m.filename}
-                >
-                  {m.filename}
-                  {m.width && m.height ? (
-                    <span className="text-slate-600">
-                      {" "}
-                      · {m.width}×{m.height}
-                    </span>
-                  ) : null}
-                </p>
-
-                {m.kind === "IMAGE" && (
-                  <button
-                    onClick={() =>
-                      setMenuFor((v) => (v === m.id ? null : m.id))
-                    }
-                    disabled={assigning === m.id}
-                    className="flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-red-600/10 border border-red-600/20 text-red-400 hover:bg-red-600/20 text-xs font-bold uppercase tracking-widest disabled:opacity-50"
-                  >
-                    {assigning === m.id ? (
-                      <LoaderCircle className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Wand2 className="w-3.5 h-3.5" />
-                    )}
-                    Utiliser pour…
-                  </button>
-                )}
-
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => copy(m.url)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-medium text-slate-300"
-                  >
-                    {copied === m.url ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5" />
-                    )}
-                    URL
-                  </button>
-                  <button
-                    onClick={() => remove(m.id)}
-                    className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10"
-                    title="Supprimer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {msg?.id === m.id && (
-                  <p
-                    className={`text-[11px] ${msg.ok ? "text-emerald-400" : "text-red-400"}`}
-                  >
-                    {msg.text}
-                  </p>
-                )}
-              </div>
-
-              {/* Menu d'assignation */}
-              {menuFor === m.id && (
-                <div className="absolute inset-x-2 bottom-2 z-20 rounded-xl border border-white/10 bg-[#0a0a0a] shadow-2xl p-2 flex flex-col gap-1 max-h-56 overflow-y-auto">
-                  <div className="flex items-center justify-between px-2 py-1">
-                    <span className="text-[10px] uppercase tracking-widest text-slate-500">
-                      Utiliser pour
-                    </span>
-                    <button
-                      onClick={() => setMenuFor(null)}
-                      className="text-slate-500 hover:text-white"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => assign(m, "profile", "portrait")}
-                    className="flex items-center gap-2 px-2 py-2 rounded-lg text-left text-xs text-slate-200 hover:bg-white/5"
-                  >
-                    <UserRound className="w-3.5 h-3.5 text-red-400" />
-                    Photo de profil{" "}
-                    <span className="text-slate-500">(4:5)</span>
-                  </button>
-                  {targets.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => assign(m, `project:${t.id}`, "video")}
-                      className="flex items-center gap-2 px-2 py-2 rounded-lg text-left text-xs text-slate-200 hover:bg-white/5"
-                    >
-                      <FolderGit2 className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                      <span className="truncate">{t.name}</span>
-                      <span className="text-slate-500 ml-auto shrink-0">
-                        (16:9)
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+    <Dialog
+      open={!!media}
+      onClose={onClose}
+      size="sm"
+      title="Texte alternatif"
+      description="Décrit l'image pour les lecteurs d'écran et le référencement."
+    >
+      <form onSubmit={save} className="flex flex-col gap-4">
+        <Field label="Description de l'image" htmlFor="media-alt">
+          <Input
+            id="media-alt"
+            value={alt}
+            onChange={(e) => setAlt(e.target.value)}
+            maxLength={200}
+            placeholder="Capture du tableau de bord de l'application"
+          />
+        </Field>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button type="submit" disabled={pending}>
+            {pending && <LoaderCircle className="animate-spin" />}
+            Enregistrer
+          </Button>
         </div>
-      )}
-    </div>
+      </form>
+    </Dialog>
   );
 }

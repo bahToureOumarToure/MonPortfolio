@@ -1,14 +1,12 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { LoaderCircle, Save } from "lucide-react";
 import { updateHero } from "@/lib/actions/singletons";
-import MediaPicker from "@/components/admin/MediaPicker";
-
-const inputCls =
-  "bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-600 outline-none focus:border-red-500/50 w-full";
-const labelCls =
-  "text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 block";
+import { Button } from "@/components/ui/button";
+import { Input, Textarea } from "@/components/ui/input";
+import MediaPicker from "./MediaPicker";
+import { Field } from "./ui";
+import { useAction, useUnsavedWarning } from "./use-action";
 
 export interface HeroFormValues {
   tagline: string;
@@ -25,162 +23,152 @@ export interface HeroFormValues {
 }
 
 export default function HeroForm({ initial }: { initial: HeroFormValues }) {
-  const router = useRouter();
   const [v, setV] = useState(initial);
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const { pending, execute } = useAction();
+  useUnsavedWarning(dirty && !pending);
 
   function set<K extends keyof HeroFormValues>(k: K, val: HeroFormValues[K]) {
     setV((p) => ({ ...p, [k]: val }));
+    setDirty(true);
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
-    setMsg(null);
-    try {
-      await updateHero({
-        ...v,
-        alternateWords: v.alternateWords
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
-      });
-      setMsg({ ok: true, text: "Hero enregistré." });
-      router.refresh();
-    } catch (err) {
-      setMsg({
-        ok: false,
-        text: err instanceof Error ? err.message : "Échec.",
-      });
-    } finally {
-      setSaving(false);
-    }
+    const res = await execute(
+      () =>
+        updateHero({
+          ...v,
+          alternateWords: v.alternateWords
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+        }),
+      { success: "Section d'accueil enregistrée." },
+    );
+    if (res.ok) setDirty(false);
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="sm:col-span-3">
-          <label className={labelCls}>Badge (tagline)</label>
-          <input
-            className={inputCls}
-            value={v.tagline}
-            onChange={(e) => set("tagline", e.target.value)}
-          />
-        </div>
-        <div>
-          <label className={labelCls}>Titre — ligne 1</label>
-          <input
-            className={inputCls}
+    <form onSubmit={submit} className="grid gap-5">
+      <Field
+        label="Badge"
+        htmlFor="h-tag"
+        hint="Petit texte au-dessus du titre (ex. disponibilité)."
+      >
+        <Input
+          id="h-tag"
+          value={v.tagline}
+          onChange={(e) => set("tagline", e.target.value)}
+          maxLength={120}
+        />
+      </Field>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="Titre — début" htmlFor="h-top">
+          <Input
+            id="h-top"
             value={v.headingTop}
             onChange={(e) => set("headingTop", e.target.value)}
+            maxLength={120}
           />
-        </div>
-        <div>
-          <label className={labelCls}>Titre — ligne 2</label>
-          <input
-            className={inputCls}
+        </Field>
+        <Field label="Titre — fin (couleur d'accent)" htmlFor="h-bottom">
+          <Input
+            id="h-bottom"
             value={v.headingBottom}
             onChange={(e) => set("headingBottom", e.target.value)}
+            maxLength={120}
           />
-        </div>
-        <div>
-          <label className={labelCls}>Nom affiché</label>
-          <input
-            className={inputCls}
+        </Field>
+        <Field label="Nom affiché" htmlFor="h-name">
+          <Input
+            id="h-name"
             value={v.name}
             onChange={(e) => set("name", e.target.value)}
             required
+            maxLength={120}
           />
-        </div>
+        </Field>
+        <Field
+          label="Désignation"
+          htmlFor="h-des"
+          hint="Utilisée si aucun mot animé n'est défini."
+        >
+          <Input
+            id="h-des"
+            value={v.designation}
+            onChange={(e) => set("designation", e.target.value)}
+            maxLength={160}
+          />
+        </Field>
       </div>
-
-      <div>
-        <label className={labelCls}>Désignation (statique)</label>
-        <input
-          className={inputCls}
-          value={v.designation}
-          onChange={(e) => set("designation", e.target.value)}
-        />
-      </div>
-
-      <div>
-        <label className={labelCls}>
-          Mots animés (séparés par des virgules)
-        </label>
-        <input
-          className={inputCls}
+      <Field
+        label="Mots animés"
+        htmlFor="h-words"
+        hint="Séparés par des virgules ; ils défilent après « Software »."
+      >
+        <Input
+          id="h-words"
           value={v.alternateWords}
           onChange={(e) => set("alternateWords", e.target.value)}
           placeholder="Developer., DevOps., Engineer."
         />
-      </div>
-
-      <div>
-        <label className={labelCls}>Sous-titre</label>
-        <textarea
-          className={inputCls}
+      </Field>
+      <Field label="Sous-titre" htmlFor="h-sub">
+        <Textarea
+          id="h-sub"
           rows={2}
           value={v.subheading}
           onChange={(e) => set("subheading", e.target.value)}
+          maxLength={400}
         />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className={labelCls}>Bouton principal — libellé</label>
-          <input
-            className={inputCls}
+      </Field>
+      <div className="grid gap-5 sm:grid-cols-3">
+        <Field label="Bouton principal" htmlFor="h-cta">
+          <Input
+            id="h-cta"
             value={v.ctaPrimaryLabel}
             onChange={(e) => set("ctaPrimaryLabel", e.target.value)}
+            maxLength={60}
           />
-        </div>
-        <div>
-          <label className={labelCls}>Bouton principal — lien</label>
-          <input
-            className={inputCls}
+        </Field>
+        <Field label="Lien du bouton" htmlFor="h-href">
+          <Input
+            id="h-href"
             value={v.ctaPrimaryHref}
             onChange={(e) => set("ctaPrimaryHref", e.target.value)}
+            placeholder="/#contact"
           />
-        </div>
-        <div>
-          <label className={labelCls}>Bouton CV — libellé</label>
-          <input
-            className={inputCls}
+        </Field>
+        <Field label="Bouton CV" htmlFor="h-cv">
+          <Input
+            id="h-cv"
             value={v.ctaResumeLabel}
             onChange={(e) => set("ctaResumeLabel", e.target.value)}
+            maxLength={60}
           />
-        </div>
+        </Field>
       </div>
-
-      <div>
-        <label className={labelCls}>Image du Hero (optionnel)</label>
+      <Field
+        label="Image du hero (optionnelle)"
+        hint="Remplace la carte « code » à droite du titre."
+      >
         <MediaPicker
-          aspect="video"
+          aspect="wide"
           value={v.heroImage}
           onChange={(url) => set("heroImage", url as string)}
         />
-      </div>
-
-      <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={saving}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-900 text-white font-bold text-sm uppercase tracking-widest disabled:opacity-50 hover:scale-[1.02] transition-transform"
-        >
-          {saving ? (
-            <LoaderCircle className="w-4 h-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
-          Enregistrer
-        </button>
-        {msg && (
-          <span className={msg.ok ? "text-emerald-400" : "text-red-400"}>
-            {msg.text}
+      </Field>
+      <div className="flex items-center justify-end gap-3">
+        {dirty && (
+          <span className="mr-auto text-xs text-muted-foreground">
+            Modifications non enregistrées
           </span>
         )}
+        <Button type="submit" disabled={pending}>
+          {pending ? <LoaderCircle className="animate-spin" /> : <Save />}
+          Enregistrer
+        </Button>
       </div>
     </form>
   );

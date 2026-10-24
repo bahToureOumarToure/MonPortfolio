@@ -2,7 +2,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ShieldCheck, LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
+import AuthCard from "@/components/admin/AuthCard";
+import { Button } from "@/components/ui/button";
+import { Input, Label } from "@/components/ui/input";
 
 type SetupInfo = { email: string; otpauthUrl: string; qrDataUrl: string };
 
@@ -65,106 +68,103 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-3xl p-8 lg:p-10 shadow-2xl">
-        <div className="flex items-center gap-3 mb-6">
-          <ShieldCheck className="w-6 h-6 text-red-500" />
-          <h1 className="text-2xl font-black tracking-tight">
-            Configuration admin
-          </h1>
-        </div>
+    <AuthCard
+      title="Configuration admin"
+      subtitle="Première connexion : sécurise l'accès à ton espace."
+    >
+      {booting && (
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <LoaderCircle className="h-4 w-4 animate-spin" /> Chargement…
+        </p>
+      )}
 
-        {booting && (
-          <p className="text-slate-400 text-sm flex items-center gap-2">
-            <LoaderCircle className="w-4 h-4 animate-spin" /> Chargement…
+      {already && (
+        <p className="text-sm">
+          L&apos;administrateur est déjà configuré.{" "}
+          <a
+            href="/admin/login"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Se connecter
+          </a>
+        </p>
+      )}
+
+      {info && (
+        <form onSubmit={submit} className="flex flex-col gap-5">
+          <p className="text-sm text-muted-foreground">
+            Compte :{" "}
+            <span className="font-medium text-foreground">{info.email}</span>.
+            Scanne ce QR code dans ton application d&apos;authentification
+            (Google Authenticator, Authy…), puis choisis un mot de passe.
           </p>
-        )}
 
-        {already && (
-          <div className="text-sm text-slate-300">
-            L'administrateur est déjà configuré.{" "}
-            <a href="/admin/login" className="text-red-400 underline">
-              Se connecter
-            </a>
+          <div className="flex justify-center">
+            <Image
+              src={info.qrDataUrl}
+              alt="QR code de configuration 2FA"
+              width={180}
+              height={180}
+              unoptimized
+              className="rounded-xl border bg-white p-2"
+            />
           </div>
-        )}
 
-        {info && (
-          <form onSubmit={submit} className="flex flex-col gap-5">
-            <p className="text-sm text-slate-400">
-              Compte : <span className="text-white">{info.email}</span>. Scanne
-              ce QR dans ton app d'authentification (Google Authenticator,
-              Authy…), puis choisis un mot de passe.
-            </p>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="setup-password">
+              Mot de passe (10 caractères minimum)
+            </Label>
+            <Input
+              id="setup-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+              minLength={10}
+              required
+            />
+          </div>
 
-            <div className="flex justify-center">
-              <Image
-                src={info.qrDataUrl}
-                alt="QR code 2FA"
-                width={180}
-                height={180}
-                unoptimized
-                className="rounded-xl border border-white/10 bg-white p-2"
-              />
-            </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="setup-confirm">Confirmer le mot de passe</Label>
+            <Input
+              id="setup-confirm"
+              type="password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              autoComplete="new-password"
+              required
+            />
+          </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                Mot de passe (min. 10 caractères)
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="new-password"
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-red-500/50"
-                required
-              />
-            </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="setup-totp">
+              Code 2FA (depuis l&apos;application)
+            </Label>
+            <Input
+              id="setup-totp"
+              inputMode="numeric"
+              value={totp}
+              onChange={(e) => setTotp(e.target.value)}
+              placeholder="123456"
+              autoComplete="one-time-code"
+              className="font-mono tracking-[0.4em]"
+              required
+            />
+          </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                Confirmer le mot de passe
-              </label>
-              <input
-                type="password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                autoComplete="new-password"
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-red-500/50"
-                required
-              />
-            </div>
+          <Button type="submit" size="lg" disabled={loading} className="w-full">
+            {loading && <LoaderCircle className="animate-spin" />}
+            Activer l&apos;administration
+          </Button>
+        </form>
+      )}
 
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                Code 2FA (depuis l'app)
-              </label>
-              <input
-                inputMode="numeric"
-                value={totp}
-                onChange={(e) => setTotp(e.target.value)}
-                placeholder="123456"
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white tracking-[0.4em] outline-none focus:border-red-500/50"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-red-600 to-red-900 text-white font-bold text-sm uppercase tracking-widest disabled:opacity-50 hover:scale-[1.02] transition-transform"
-            >
-              {loading && <LoaderCircle className="w-5 h-5 animate-spin" />}
-              Activer l'administration
-            </button>
-          </form>
-        )}
-
-        {error && !already && (
-          <p className="mt-5 text-sm text-red-400 text-center">{error}</p>
-        )}
-      </div>
-    </div>
+      {error && !already && (
+        <p role="alert" className="mt-5 text-center text-sm text-destructive">
+          {error}
+        </p>
+      )}
+    </AuthCard>
   );
 }

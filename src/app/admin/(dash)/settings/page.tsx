@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/auth/admin";
 import { getAdminSettings } from "@/lib/admin-queries";
 import SettingsForm from "@/components/admin/SettingsForm";
 import ResumeUploader from "@/components/admin/ResumeUploader";
+import { PageHeader } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -24,15 +25,13 @@ export default async function SettingsAdminPage() {
     : null;
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight">Paramètres</h1>
-        <p className="text-slate-400 mt-1">
-          Informations générales, coordonnées, footer et CV.
-        </p>
-      </div>
+    <>
+      <PageHeader
+        title="Paramètres & CV"
+        description="Coordonnées, référencement, pied de page et CV."
+      />
       <SettingsForm initial={initial} />
       <ResumeUploader current={currentResume} />
-    </div>
+    </>
   );
 }

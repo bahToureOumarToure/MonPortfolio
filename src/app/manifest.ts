@@ -4,11 +4,11 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Bah Oumar Touré Portfolio",
     short_name: "Bah Oumar Touré",
-    description: "A portfolio Progressive Web App built by Bah Oumar Touré",
+    description: "Portfolio de Bah Oumar Touré — IA, Data, DevOps & Full-Stack",
     start_url: "/",
     display: "standalone",
-    background_color: "#000000",
-    theme_color: "#000000",
+    background_color: "#ffffff",
+    theme_color: "#ffffff",
     icons: [
       {
         src: "/Pwa-logos/new-icons/manifest-icon-192.maskable.png",
@@ -37,16 +37,10 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     screenshots: [
       {
-        src: "/Pwa-logos/Logo-v1-white.png",
-        sizes: "1280x720",
+        src: "/Website-overview.png",
+        sizes: "1031x1024",
         type: "image/png",
-        form_factor: "wide",
-      },
-      {
-        src: "/Pwa-logos/Logo-v1-white.png",
-        sizes: "1080x1920",
-        type: "image/png",
-        form_factor: "narrow",
+        label: "Portfolio de Bah Oumar Touré",
       },
     ],
   };

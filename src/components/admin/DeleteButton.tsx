@@ -1,43 +1,42 @@
 "use client";
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { Trash2, LoaderCircle } from "lucide-react";
+import { LoaderCircle, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { ActionResult } from "@/lib/actions/result";
+import { useAction } from "./use-action";
 
 export default function DeleteButton({
   action,
   confirmText = "Confirmer la suppression ?",
+  successText = "Supprimé.",
   compact = false,
+  onDone,
 }: {
-  action: () => Promise<void>;
+  action: () => Promise<ActionResult<unknown>>;
   confirmText?: string;
+  successText?: string;
   compact?: boolean;
+  onDone?: () => void;
 }) {
-  const [pending, start] = useTransition();
-  const router = useRouter();
+  const { pending, execute } = useAction();
 
-  function onClick() {
+  async function onClick() {
     if (!window.confirm(confirmText)) return;
-    start(async () => {
-      await action();
-      router.refresh();
-    });
+    const res = await execute(action, { success: successText });
+    if (res.ok) onDone?.();
   }
 
   return (
-    <button
+    <Button
+      type="button"
+      variant="destructive-ghost"
+      size={compact ? "icon-sm" : "sm"}
       onClick={onClick}
       disabled={pending}
       title="Supprimer"
-      className={`inline-flex items-center gap-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors disabled:opacity-50 ${
-        compact ? "p-2" : "px-3 py-2 text-sm font-medium"
-      }`}
+      aria-label="Supprimer"
     >
-      {pending ? (
-        <LoaderCircle className="w-4 h-4 animate-spin" />
-      ) : (
-        <Trash2 className="w-4 h-4" />
-      )}
+      {pending ? <LoaderCircle className="animate-spin" /> : <Trash2 />}
       {!compact && "Supprimer"}
-    </button>
+    </Button>
   );
 }

@@ -1,12 +1,26 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Save, Trash2, Pencil, X, LoaderCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link2, LoaderCircle, Pencil, Plus, Save, X } from "lucide-react";
 import {
   createSocial,
-  updateSocial,
   deleteSocial,
+  reorderSocials,
+  updateSocial,
 } from "@/lib/actions/collections";
+import { getSocialIcon } from "@/../utils/social-icons";
+import { Button } from "@/components/ui/button";
+import { Input, Select } from "@/components/ui/input";
+import DeleteButton from "./DeleteButton";
+import ReorderButtons from "./ReorderButtons";
+import {
+  Checkbox,
+  ColorInput,
+  EmptyState,
+  Field,
+  Panel,
+  StatusBadge,
+} from "./ui";
+import { move, useAction } from "./use-action";
 
 export interface SocialRow {
   id: string;
@@ -18,24 +32,33 @@ export interface SocialRow {
   active: boolean;
 }
 
-const empty = (): Omit<SocialRow, "id"> => ({
+type FormState = Omit<SocialRow, "id" | "order">;
+
+const ICONS = [
+  { key: "github", label: "GitHub" },
+  { key: "linkedin", label: "LinkedIn" },
+  { key: "x", label: "X / Twitter" },
+  { key: "facebook", label: "Facebook" },
+  { key: "instagram", label: "Instagram" },
+  { key: "stackoverflow", label: "Stack Overflow" },
+  { key: "leetcode", label: "LeetCode" },
+  { key: "link", label: "Autre lien" },
+];
+
+const empty = (): FormState => ({
   platform: "",
   url: "",
   iconKey: "",
   color: "",
-  order: 0,
   active: true,
 });
 
-const inputCls =
-  "bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-slate-600 outline-none focus:border-red-500/50";
-
 export default function SocialsManager({ initial }: { initial: SocialRow[] }) {
-  const router = useRouter();
+  const [rows, setRows] = useState(initial);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<Omit<SocialRow, "id">>(empty());
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState<FormState>(empty());
+  const { pending, execute } = useAction();
+  useEffect(() => setRows(initial), [initial]);
 
   function edit(r: SocialRow) {
     setEditingId(r.id);
@@ -44,183 +67,177 @@ export default function SocialsManager({ initial }: { initial: SocialRow[] }) {
       url: r.url,
       iconKey: r.iconKey,
       color: r.color,
-      order: r.order,
       active: r.active,
     });
+    document
+      .getElementById("social-form")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
   function reset() {
     setEditingId(null);
     setForm(empty());
-    setError(null);
   }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      if (editingId) await updateSocial(editingId, form);
-      else await createSocial(form);
-      reset();
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Échec.");
-    } finally {
-      setBusy(false);
-    }
+    const res = await execute(
+      () => (editingId ? updateSocial(editingId, form) : createSocial(form)),
+      { success: editingId ? "Lien mis à jour." : "Lien ajouté." },
+    );
+    if (res.ok) reset();
   }
 
-  async function remove(id: string) {
-    if (!window.confirm("Supprimer ce lien ?")) return;
-    await deleteSocial(id);
-    router.refresh();
+  async function onMove(from: number, to: number) {
+    const next = move(rows, from, to);
+    setRows(next);
+    const res = await execute(() => reorderSocials(next.map((r) => r.id)));
+    if (!res.ok) setRows(rows);
   }
 
-  const knownKeys =
-    "github, linkedin, twitter, facebook, instagram, stackoverflow, leetcode";
+  const PreviewIcon = getSocialIcon(form.iconKey || form.platform);
 
   return (
     <div className="flex flex-col gap-6">
-      <form
-        onSubmit={save}
-        className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col gap-3"
+      <Panel
+        title={editingId ? "Modifier le lien" : "Ajouter un lien"}
+        actions={
+          editingId && (
+            <Button type="button" variant="ghost" size="sm" onClick={reset}>
+              <X /> Annuler
+            </Button>
+          )
+        }
       >
-        <h2 className="font-bold text-sm uppercase tracking-widest text-slate-400">
-          {editingId ? "Modifier" : "Ajouter"} un lien
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <input
-            className={inputCls}
-            placeholder="Plateforme (ex. GitHub)"
-            value={form.platform}
-            onChange={(e) => setForm({ ...form, platform: e.target.value })}
-            required
-          />
-          <input
-            className={`${inputCls} sm:col-span-2`}
-            placeholder="https://…"
-            value={form.url}
-            onChange={(e) => setForm({ ...form, url: e.target.value })}
-            required
-          />
-          <input
-            className={inputCls}
-            placeholder={`iconKey (${knownKeys})`}
-            value={form.iconKey}
-            onChange={(e) => setForm({ ...form, iconKey: e.target.value })}
-          />
-          <input
-            className={inputCls}
-            placeholder="couleur #hex"
-            value={form.color}
-            onChange={(e) => setForm({ ...form, color: e.target.value })}
-          />
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              className={`${inputCls} w-20`}
-              placeholder="ordre"
-              value={form.order}
-              onChange={(e) =>
-                setForm({ ...form, order: Number(e.target.value) })
-              }
-            />
-            <label className="flex items-center gap-2 text-sm text-slate-300">
-              <input
-                type="checkbox"
-                checked={form.active}
-                onChange={(e) => setForm({ ...form, active: e.target.checked })}
-                className="accent-red-500 w-4 h-4"
-              />
-              Actif
-            </label>
-          </div>
-        </div>
-        {error && <p className="text-sm text-red-400">{error}</p>}
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={busy}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-red-600 to-red-900 text-white font-bold text-xs uppercase tracking-widest disabled:opacity-50"
-          >
-            {busy ? (
-              <LoaderCircle className="w-4 h-4 animate-spin" />
-            ) : editingId ? (
-              <Save className="w-4 h-4" />
-            ) : (
-              <Plus className="w-4 h-4" />
-            )}
-            {editingId ? "Enregistrer" : "Ajouter"}
-          </button>
-          {editingId && (
-            <button
-              type="button"
-              onClick={reset}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-xs uppercase tracking-widest"
-            >
-              <X className="w-4 h-4" /> Annuler
-            </button>
-          )}
-        </div>
-      </form>
-
-      <div className="rounded-2xl border border-white/10 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-white/[0.03] text-slate-400 text-xs uppercase tracking-widest">
-            <tr>
-              <th className="text-left px-4 py-3">Plateforme</th>
-              <th className="text-left px-4 py-3">URL</th>
-              <th className="text-left px-4 py-3">État</th>
-              <th className="text-right px-4 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {initial.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-4 py-6 text-slate-500">
-                  Aucun lien.
-                </td>
-              </tr>
-            )}
-            {initial.map((r) => (
-              <tr
-                key={r.id}
-                className="border-t border-white/5 hover:bg-white/[0.02]"
+        <form id="social-form" onSubmit={save} className="grid gap-5">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Plateforme" htmlFor="so-platform">
+              <div className="relative">
+                <PreviewIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="so-platform"
+                  className="pl-9"
+                  value={form.platform}
+                  onChange={(e) =>
+                    setForm({ ...form, platform: e.target.value })
+                  }
+                  placeholder="GitHub"
+                  required
+                  maxLength={60}
+                />
+              </div>
+            </Field>
+            <Field label="Icône" htmlFor="so-icon">
+              <Select
+                id="so-icon"
+                value={form.iconKey}
+                onChange={(e) => setForm({ ...form, iconKey: e.target.value })}
               >
-                <td className="px-4 py-3 font-medium text-white">
-                  {r.platform}
-                </td>
-                <td className="px-4 py-3 text-slate-400 truncate max-w-[240px]">
-                  {r.url}
-                </td>
-                <td className="px-4 py-3 text-xs font-bold">
-                  {r.active ? (
-                    <span className="text-emerald-400">Actif</span>
-                  ) : (
-                    <span className="text-slate-500">Masqué</span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      onClick={() => edit(r)}
-                      className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => remove(r.id)}
-                      className="p-2 rounded-lg text-red-400 hover:bg-red-500/10"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                <option value="">Automatique (selon la plateforme)</option>
+                {ICONS.map((i) => (
+                  <option key={i.key} value={i.key}>
+                    {i.label}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="URL" htmlFor="so-url" className="sm:col-span-2">
+              <Input
+                id="so-url"
+                type="url"
+                value={form.url}
+                onChange={(e) => setForm({ ...form, url: e.target.value })}
+                placeholder="https://github.com/…"
+                required
+              />
+            </Field>
+            <Field
+              label="Couleur au survol"
+              htmlFor="so-color"
+              hint="Vide = couleur de la marque."
+            >
+              <ColorInput
+                id="so-color"
+                value={form.color}
+                onChange={(color) => setForm({ ...form, color })}
+              />
+            </Field>
+          </div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <Checkbox
+              checked={form.active}
+              onChange={(active) => setForm({ ...form, active })}
+              label="Visible sur le site"
+            />
+            <Button type="submit" disabled={pending}>
+              {pending ? (
+                <LoaderCircle className="animate-spin" />
+              ) : editingId ? (
+                <Save />
+              ) : (
+                <Plus />
+              )}
+              {editingId ? "Enregistrer" : "Ajouter"}
+            </Button>
+          </div>
+        </form>
+      </Panel>
+
+      {rows.length === 0 ? (
+        <EmptyState
+          icon={<Link2 className="h-8 w-8" />}
+          title="Aucun lien"
+          description="Ajoute tes réseaux ci-dessus."
+        />
+      ) : (
+        <ul className="divide-y overflow-hidden rounded-xl border bg-card shadow-sm">
+          {rows.map((r, i) => {
+            const Icon = getSocialIcon(r.iconKey || r.platform);
+            return (
+              <li key={r.id} className="flex items-center gap-3 p-3 sm:p-4">
+                <ReorderButtons
+                  index={i}
+                  count={rows.length}
+                  onMove={onMove}
+                  disabled={pending}
+                />
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{r.platform}</p>
+                  <a
+                    href={r.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block truncate text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {r.url}
+                  </a>
+                </div>
+                <span className="hidden sm:block">
+                  <StatusBadge active={r.active} />
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Modifier ${r.platform}`}
+                  onClick={() => edit(r)}
+                >
+                  <Pencil />
+                </Button>
+                <DeleteButton
+                  compact
+                  action={() => deleteSocial(r.id)}
+                  confirmText={`Supprimer le lien « ${r.platform} » ?`}
+                  successText="Lien supprimé."
+                  onDone={() => editingId === r.id && reset()}
+                />
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

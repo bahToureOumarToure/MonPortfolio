@@ -1,5 +1,5 @@
 // Formats attendus par chaque emplacement d'image du site public.
-export type SlotAspect = "portrait" | "video" | "square";
+export type SlotAspect = "portrait" | "video" | "wide" | "square";
 
 export const SLOT: Record<
   SlotAspect,
@@ -7,6 +7,7 @@ export const SLOT: Record<
 > = {
   portrait: { ratio: 4 / 5, label: "portrait 4:5", cls: "aspect-[4/5]" },
   video: { ratio: 16 / 9, label: "paysage 16:9", cls: "aspect-video" },
+  wide: { ratio: 4 / 3, label: "paysage 4:3", cls: "aspect-[4/3]" },
   square: { ratio: 1, label: "carré 1:1", cls: "aspect-square" },
 };
 
@@ -34,4 +35,22 @@ export function describeOrientation(
   if (r > 1.2) return "paysage";
   if (r < 0.85) return "portrait";
   return "carré";
+}
+
+/**
+ * Sources d'image acceptées par next/image dans ce projet : fichiers locaux
+ * (/public) ou Vercel Blob. Toute autre origine ferait planter le rendu.
+ */
+export function isAllowedImageUrl(url: string): boolean {
+  const u = url.trim();
+  if (/^\/(?!\/)/.test(u)) return true;
+  try {
+    const { protocol, hostname } = new URL(u);
+    return (
+      protocol === "https:" &&
+      hostname.endsWith(".public.blob.vercel-storage.com")
+    );
+  } catch {
+    return false;
+  }
 }

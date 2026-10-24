@@ -46,7 +46,26 @@ export async function getAdminMedia(kind?: "IMAGE" | "DOCUMENT") {
   return prisma.media.findMany({
     where: kind ? { kind } : undefined,
     orderBy: { createdAt: "desc" },
+    include: {
+      _count: {
+        select: {
+          heroImages: true,
+          profileImages: true,
+          projectImages: true,
+          projectCovers: true,
+          resumeSettings: true,
+        },
+      },
+    },
   });
+}
+
+export async function getAdminEducations() {
+  return prisma.education.findMany({ orderBy: { order: "asc" } });
+}
+
+export async function getRecentActivity(take = 8) {
+  return prisma.auditLog.findMany({ orderBy: { createdAt: "desc" }, take });
 }
 
 export async function getAdminSkills() {

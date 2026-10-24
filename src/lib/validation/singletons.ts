@@ -1,11 +1,12 @@
-import { z } from "zod";
+import { z } from "./zod-fr";
+import { isAllowedImageUrl } from "@/lib/media-format";
 
 const optionalImage = z
   .string()
   .trim()
   .refine(
-    (v) => v === "" || /^(https?:\/\/|\/)/.test(v),
-    "URL/chemin invalide.",
+    (v) => v === "" || isAllowedImageUrl(v),
+    "Image : choisis un fichier de la médiathèque.",
   )
   .default("");
 
@@ -27,7 +28,11 @@ export type HeroInput = z.infer<typeof heroInput>;
 export const profileInput = z.object({
   aboutTitle: z.string().trim().max(80).default("About"),
   aboutHighlight: z.string().trim().max(120).default(""),
-  description: z.string().trim().min(1, "La description est requise."),
+  description: z
+    .string()
+    .trim()
+    .min(1, "La description est requise.")
+    .max(4000),
   image: optionalImage,
 });
 export type ProfileInput = z.infer<typeof profileInput>;
@@ -35,7 +40,15 @@ export type ProfileInput = z.infer<typeof profileInput>;
 export const settingsInput = z.object({
   siteTitle: z.string().trim().max(160).default(""),
   metaDescription: z.string().trim().max(320).default(""),
-  contactEmail: z.string().trim().max(160).default(""),
+  contactEmail: z
+    .string()
+    .trim()
+    .max(160)
+    .refine(
+      (v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      "Email public invalide.",
+    )
+    .default(""),
   phone: z.string().trim().max(60).default(""),
   address: z.string().trim().max(160).default(""),
   footerTagline: z.string().trim().max(400).default(""),

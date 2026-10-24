@@ -14,9 +14,9 @@ export interface ProjectVM {
   demo: string; // "" si absent
   date: string;
   images: string[];
-  videos?: string[];
-  highlights?: string[];
-  challenges?: string[];
+  featured: boolean;
+  highlights: string[];
+  challenges: string[];
 }
 
 export interface HeroVM {
@@ -67,6 +67,13 @@ export interface SkillVM {
 }
 
 export type GroupedSkills = Record<SkillCategory, SkillVM[]>;
+
+export interface EducationVM {
+  id: string | number;
+  title: string;
+  institution: string;
+  duration: string;
+}
 
 export interface ExperienceVM {
   id: string | number;

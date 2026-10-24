@@ -45,20 +45,20 @@ model Media {
 // Singletons de contenu (une seule ligne). id fixe = "singleton".
 // =====================================================================
 model Hero {
-  id             String   @id @default("singleton")
-  tagline        String   @default("")
-  headingTop     String   @default("")
-  headingBottom  String   @default("")
-  name           String
-  designation    String
-  alternateWords String[] @default([])
-  subheading     String   @default("")
-  ctaPrimaryLabel   String @default("Let's Collaborate")
-  ctaPrimaryHref    String @default("/#contact")
-  ctaResumeLabel    String @default("Get Resume")
-  heroImageId    String?
-  heroImage      Media?   @relation("HeroImage", fields: [heroImageId], references: [id])
-  updatedAt      DateTime @updatedAt
+  id              String   @id @default("singleton")
+  tagline         String   @default("")
+  headingTop      String   @default("")
+  headingBottom   String   @default("")
+  name            String
+  designation     String
+  alternateWords  String[] @default([])
+  subheading      String   @default("")
+  ctaPrimaryLabel String   @default("Let's Collaborate")
+  ctaPrimaryHref  String   @default("/#contact")
+  ctaResumeLabel  String   @default("Get Resume")
+  heroImageId     String?
+  heroImage       Media?   @relation("HeroImage", fields: [heroImageId], references: [id])
+  updatedAt       DateTime @updatedAt
 }
 
 model Profile {
@@ -72,20 +72,20 @@ model Profile {
 }
 
 model SiteSettings {
-  id               String   @id @default("singleton")
-  siteTitle        String   @default("")
-  metaDescription  String   @default("")
-  contactEmail     String   @default("")
-  phone            String   @default("")
-  address          String   @default("")
-  footerTagline    String   @default("")
+  id                String   @id @default("singleton")
+  siteTitle         String   @default("")
+  metaDescription   String   @default("")
+  contactEmail      String   @default("")
+  phone             String   @default("")
+  address           String   @default("")
+  footerTagline     String   @default("")
   // Visibilité et ordre des sections publiques (clé -> {visible, order})
-  sections         Json?
+  sections          Json?
   publishedResumeId String?
-  publishedResume  Media?   @relation("PublishedResume", fields: [publishedResumeId], references: [id])
+  publishedResume   Media?   @relation("PublishedResume", fields: [publishedResumeId], references: [id])
   // Lien de secours si aucun fichier CV n'est publié (ex. Google Drive)
   resumeExternalUrl String?
-  updatedAt        DateTime @updatedAt
+  updatedAt         DateTime @updatedAt
 }
 
 // =====================================================================
@@ -128,26 +128,26 @@ model SocialLink {
 }
 
 model Project {
-  id             String   @id @default(cuid())
+  id             String         @id @default(cuid())
   legacyId       Int? // conserve l'id numérique historique (routes /projects/[id])
   name           String
   description    String
-  role           String   @default("")
-  tools          String[] @default([])
-  highlights     String[] @default([])
-  challenges     String[] @default([])
+  role           String         @default("")
+  tools          String[]       @default([])
+  highlights     String[]       @default([])
+  challenges     String[]       @default([])
   codeUrl        String?
   demoUrl        String?
   date           String? // format libre existant ("2025-12-20")
   status         String?
-  featured       Boolean  @default(false)
-  active         Boolean  @default(true)
-  order          Int      @default(0)
+  featured       Boolean        @default(false)
+  active         Boolean        @default(true)
+  order          Int            @default(0)
   primaryImageId String?
-  primaryImage   Media?   @relation("ProjectPrimaryImage", fields: [primaryImageId], references: [id])
+  primaryImage   Media?         @relation("ProjectPrimaryImage", fields: [primaryImageId], references: [id])
   images         ProjectImage[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   @@index([active, order])
 }
@@ -210,8 +210,8 @@ model User {
 
   sessions       Session[]
   authenticators Authenticator[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model Session {
@@ -262,4 +262,18 @@ model AuditLog {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+// =====================================================================
+// Apparence du site (singleton) — pilotée depuis /admin/appearance.
+// Table volontairement isolée : si elle n'existe pas encore en base, le site
+// retombe simplement sur le thème par défaut (clair) sans rien casser.
+// Créée de façon additive au build par scripts/db-sync.mjs (prisma/sql/*).
+// =====================================================================
+model SiteTheme {
+  id        String   @id @default("singleton")
+  mode      String   @default("light") // "light" | "dark" | "system"
+  accent    String   @default("#dc2626") // couleur d'accent (#rrggbb)
+  radius    String   @default("lg") // "sm" | "md" | "lg" | "xl"
+  updatedAt DateTime @updatedAt
 }
