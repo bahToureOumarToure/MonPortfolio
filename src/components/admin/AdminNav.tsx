@@ -13,6 +13,7 @@ import {
   Link2,
   LogOut,
   Menu,
+  Palette,
   Settings,
   ShieldCheck,
   UserRound,
@@ -44,6 +45,7 @@ const GROUPS = [
   {
     label: "Site",
     items: [
+      { href: "/admin/appearance", label: "Apparence", icon: Palette },
       { href: "/admin/settings", label: "Paramètres & CV", icon: Settings },
       { href: "/admin/security", label: "Sécurité", icon: ShieldCheck },
     ],

@@ -24,6 +24,7 @@ import {
 import { experiences as experiencesData } from "../../utils/Data/experience";
 import { educations as educationsData } from "../../utils/Data/educations";
 import { getSocialColor } from "../../utils/social-icons";
+import { DEFAULT_THEME, sanitizeTheme, type ThemeVM } from "./theme";
 
 export const CONTENT_TAGS = {
   hero: "hero",
@@ -34,6 +35,7 @@ export const CONTENT_TAGS = {
   projects: "projects",
   experiences: "experiences",
   educations: "educations",
+  theme: "theme",
 } as const;
 
 const CATEGORY_LABEL: Record<PrismaSkillCategory, SkillCategory> = {
@@ -201,6 +203,22 @@ function defaultExperiences(): ExperienceVM[] {
 // ------------------------------------------------------------------
 // Lectures (DB -> VM, avec repli)
 // ------------------------------------------------------------------
+/** Thème du site ; thème clair par défaut si la table n'existe pas encore. */
+export const getTheme = unstable_cache(
+  async (): Promise<ThemeVM> => {
+    try {
+      const t = await prisma.siteTheme.findUnique({
+        where: { id: "singleton" },
+      });
+      return t ? sanitizeTheme(t) : DEFAULT_THEME;
+    } catch {
+      return DEFAULT_THEME;
+    }
+  },
+  ["theme"],
+  { tags: [CONTENT_TAGS.theme] },
+);
+
 export const getSettings = unstable_cache(
   async (): Promise<SettingsVM> => {
     try {

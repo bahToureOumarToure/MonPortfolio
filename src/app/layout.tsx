@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
+import { getTheme } from "@/lib/queries";
+import { SYSTEM_MODE_SCRIPT, themeCss } from "@/lib/theme";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -14,10 +16,23 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-export const viewport: Viewport = {
-  themeColor: "#ffffff",
-  colorScheme: "light",
-};
+const LIGHT_BG = "#ffffff";
+const DARK_BG = "#09090b";
+
+export async function generateViewport(): Promise<Viewport> {
+  const { mode } = await getTheme();
+  if (mode === "dark") return { themeColor: DARK_BG, colorScheme: "dark" };
+  if (mode === "system") {
+    return {
+      themeColor: [
+        { media: "(prefers-color-scheme: light)", color: LIGHT_BG },
+        { media: "(prefers-color-scheme: dark)", color: DARK_BG },
+      ],
+      colorScheme: "light dark",
+    };
+  }
+  return { themeColor: LIGHT_BG, colorScheme: "light" };
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -219,13 +234,30 @@ const jsonLd = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const theme = await getTheme();
+  const fonts = `${geistSans.variable} ${geistMono.variable}`;
+
   return (
-    <html lang="fr" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html
+      lang="fr"
+      className={theme.mode === "dark" ? `${fonts} dark` : fonts}
+      // Le mode « automatique » ajoute .dark côté client avant l'affichage.
+      suppressHydrationWarning={theme.mode === "system"}
+    >
+      <head>
+        <style
+          id="theme-tokens"
+          dangerouslySetInnerHTML={{ __html: themeCss(theme) }}
+        />
+        {theme.mode === "system" && (
+          <script dangerouslySetInnerHTML={{ __html: SYSTEM_MODE_SCRIPT }} />
+        )}
+      </head>
       <body>
         <script
           type="application/ld+json"

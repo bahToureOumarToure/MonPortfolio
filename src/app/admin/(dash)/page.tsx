@@ -8,6 +8,7 @@ import {
   GraduationCap,
   Images,
   Link2,
+  Palette,
   Settings,
   ShieldCheck,
   UserRound,
@@ -71,6 +72,12 @@ const SHORTCUTS = [
     icon: Images,
   },
   {
+    href: "/admin/appearance",
+    label: "Apparence",
+    desc: "Mode clair/sombre, couleur",
+    icon: Palette,
+  },
+  {
     href: "/admin/settings",
     label: "Paramètres & CV",
     desc: "Coordonnées, SEO, CV",
@@ -90,6 +97,8 @@ const ACTION_LABELS: Record<string, string> = {
   "admin.setup": "Configuration de l'admin",
   "passkey.register": "Nouvelle passkey",
   "settings.publishedResume": "CV publié",
+  "theme.update": "Apparence modifiée",
+  "theme.reset": "Apparence réinitialisée",
 };
 
 const VERBS: Record<string, string> = {

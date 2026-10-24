@@ -8,7 +8,9 @@
  * sont surchargés à l'exécution par le thème choisi dans l'admin.
  */
 @layer base {
-  :root {
+  /* .light force le thème clair sur un sous-arbre (ex. aperçu dans l'admin). */
+  :root,
+  .light {
     --brand: 0 72% 51%;
     --brand-foreground: 0 0% 100%;
 
