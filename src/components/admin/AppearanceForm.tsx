@@ -160,7 +160,7 @@ export default function AppearanceForm({
                     disabled={disabled}
                     onClick={() => setAccent(preset.value)}
                     className={cn(
-                      "relative h-10 w-10 rounded-full border-2 transition-transform hover:scale-105 disabled:opacity-60",
+                      "relative h-10 w-10 rounded-full border-2 shadow-[inset_0_0_0_1px_hsl(var(--foreground)/0.12)] transition-transform hover:scale-105 disabled:opacity-60",
                       active ? "border-foreground" : "border-transparent",
                     )}
                     style={{ backgroundColor: preset.value }}
