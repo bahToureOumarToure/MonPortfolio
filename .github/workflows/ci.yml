@@ -1,0 +1,79 @@
+name: CI
+
+# Garde-fou avant toute mise en production : chaque push (toutes branches) et
+# chaque PR vers main doivent passer lint + typecheck + build sur une vraie base
+# Postgres seedée. Vercel ne promeut en prod que ce qui est mergé dans main.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: 1
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/portfolio
+  DIRECT_URL: postgresql://postgres:postgres@localhost:5432/portfolio
+  AUTH_SECRET: ci-only-secret-not-used-in-production
+  ADMIN_EMAIL: ci@example.com
+
+jobs:
+  quality:
+    name: Lint · Typecheck · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: portfolio
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Schéma Prisma → base de test
+        run: npx prisma db push --skip-generate
+
+      - name: Seed
+        run: npm run db:seed
+
+      - name: Cache Next.js
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**', 'utils/**') }}
+          restore-keys: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+
+      - name: Build
+        run: npm run build

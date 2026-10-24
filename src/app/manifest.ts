@@ -37,16 +37,10 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     screenshots: [
       {
-        src: "/Pwa-logos/Logo-v1-white.png",
-        sizes: "1280x720",
+        src: "/Website-overview.png",
+        sizes: "1031x1024",
         type: "image/png",
-        form_factor: "wide",
-      },
-      {
-        src: "/Pwa-logos/Logo-v1-white.png",
-        sizes: "1080x1920",
-        type: "image/png",
-        form_factor: "narrow",
+        label: "Portfolio de Bah Oumar Touré",
       },
     ],
   };
