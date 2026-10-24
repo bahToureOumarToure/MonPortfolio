@@ -1,11 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import Script from "next/script";
 import "./globals.css";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import ScrollToTopButton from "@/../utils/ScrollToTopButton";
-import { getSettings, getSocialLinks } from "@/lib/queries";
+import { SITE_URL } from "@/lib/site";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -18,7 +14,10 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-const SITE_URL = "https://www.bahoumartoure.com";
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+  colorScheme: "light",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -97,8 +96,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/Website-overview.png",
-        width: 1200,
-        height: 630,
+        width: 1031,
+        height: 1024,
         alt: "Portfolio de Bah Oumar Touré - Junior Developer IA, Data, DevOps & Full-Stack",
       },
     ],
@@ -209,10 +208,6 @@ const jsonLd = {
     { "@type": "Language", name: "Arabe (Darija)", alternateName: "ar" },
     { "@type": "Language", name: "Anglais", alternateName: "en" },
   ],
-  seeks: {
-    "@type": "Demande",
-    name: "Stage de Fin d'Année (PFA) - IA, Data, DevOps ou Full-Stack",
-  },
   address: {
     "@type": "PostalAddress",
     addressLocality: "Berkane / Oujda",
@@ -224,34 +219,19 @@ const jsonLd = {
   ],
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [settings, socials] = await Promise.all([
-    getSettings(),
-    getSocialLinks(),
-  ]);
-
   return (
-    <html lang="fr">
-      <head>
-        <Script
-          id="json-ld-person"
+    <html lang="fr" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body>
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-      </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Navbar />
-        <main className="text-white">
-          <div className="container">{children}</div>
-        </main>
-        <ScrollToTopButton />
-        <Footer settings={settings} socials={socials} />
+        {children}
       </body>
     </html>
   );

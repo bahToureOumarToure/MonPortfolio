@@ -16,7 +16,6 @@ import {
   SiBootstrap,
   SiMui,
   SiCanva,
-  SiFreelancer,
   SiFlutter,
   SiPython,
   SiSpringboot,
@@ -26,7 +25,7 @@ import {
   SiOpenai,
 } from "react-icons/si";
 import { IconType } from "react-icons";
-import { TbBrandCSharp, TbSql } from "react-icons/tb";
+import { TbBrandCSharp, TbCode, TbSql } from "react-icons/tb";
 import { FaDatabase, FaBrain, FaChartBar } from "react-icons/fa";
 
 // ============================================
@@ -145,7 +144,7 @@ export const getSkillIcon = (skill: string): IconType => {
     case "photoshop":
 
     default:
-      return SiFreelancer;
+      return TbCode;
   }
 };
 

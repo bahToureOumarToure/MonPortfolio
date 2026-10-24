@@ -13,6 +13,7 @@ import type {
   GroupedSkills,
   ProjectVM,
   ExperienceVM,
+  EducationVM,
 } from "./content-types";
 import { personalData } from "../../utils/Data/PersonalData";
 import { projectsData } from "../../utils/Data/projects-data";
@@ -21,6 +22,7 @@ import {
   type SkillCategory,
 } from "../../utils/Data/skills";
 import { experiences as experiencesData } from "../../utils/Data/experience";
+import { educations as educationsData } from "../../utils/Data/educations";
 import { getSocialColor } from "../../utils/social-icons";
 
 export const CONTENT_TAGS = {
@@ -31,6 +33,7 @@ export const CONTENT_TAGS = {
   skills: "skills",
   projects: "projects",
   experiences: "experiences",
+  educations: "educations",
 } as const;
 
 const CATEGORY_LABEL: Record<PrismaSkillCategory, SkillCategory> = {
@@ -170,9 +173,18 @@ function defaultProjects(): ProjectVM[] {
     demo: p.demo || "",
     date: p.date || "",
     images: (p.images ?? []).filter(Boolean),
-    videos: p.videos,
-    highlights: p.highlights,
-    challenges: p.challenges,
+    featured: false,
+    highlights: p.highlights ?? [],
+    challenges: p.challenges ?? [],
+  }));
+}
+
+function defaultEducations(): EducationVM[] {
+  return educationsData.map((e) => ({
+    id: e.id,
+    title: e.title,
+    institution: e.institution,
+    duration: e.duration,
   }));
 }
 
@@ -352,8 +364,31 @@ export const getExperiences = unstable_cache(
   { tags: [CONTENT_TAGS.experiences] },
 );
 
+export const getEducations = unstable_cache(
+  async (): Promise<EducationVM[]> => {
+    try {
+      const rows = await prisma.education.findMany({
+        where: { active: true },
+        orderBy: { order: "asc" },
+      });
+      if (!rows.length) return defaultEducations();
+      return rows.map((r) => ({
+        id: r.id,
+        title: r.title,
+        institution: r.institution,
+        duration: r.duration,
+      }));
+    } catch {
+      return defaultEducations();
+    }
+  },
+  ["educations"],
+  { tags: [CONTENT_TAGS.educations] },
+);
+
 type ProjectWithImages = {
   legacyId: number | null;
+  featured: boolean;
   name: string;
   description: string;
   tools: string[];
@@ -383,6 +418,7 @@ function projectToVM(p: ProjectWithImages): ProjectVM {
     demo: p.demoUrl ?? "",
     date: p.date ?? "",
     images,
+    featured: p.featured,
     highlights: p.highlights,
     challenges: p.challenges,
   };
@@ -411,9 +447,12 @@ export const getProjects = unstable_cache(
   { tags: [CONTENT_TAGS.projects] },
 );
 
+/** Projets « mis en avant » d'abord (ordre admin), complétés par les suivants. */
 export async function getFeaturedProjects(limit = 3): Promise<ProjectVM[]> {
   const all = await getProjects();
-  return all.slice(0, limit);
+  const featured = all.filter((p) => p.featured);
+  const rest = all.filter((p) => !p.featured);
+  return [...featured, ...rest].slice(0, limit);
 }
 
 export function getProjectByLegacyId(id: number): Promise<ProjectVM | null> {
