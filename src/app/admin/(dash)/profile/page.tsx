@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/auth/admin";
 import { getAdminHero, getAdminProfile } from "@/lib/admin-queries";
 import HeroForm from "@/components/admin/HeroForm";
 import ProfileForm from "@/components/admin/ProfileForm";
+import { PageHeader, Panel } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -32,23 +33,17 @@ export default async function ProfileAdminPage() {
   };
 
   return (
-    <div className="flex flex-col gap-10 max-w-4xl">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight">Profil / Hero</h1>
-        <p className="text-slate-400 mt-1">
-          Section d'accueil et présentation « About ».
-        </p>
-      </div>
-
-      <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-        <h2 className="text-lg font-bold mb-5">Section Hero</h2>
+    <>
+      <PageHeader
+        title="Profil & Hero"
+        description="Section d'accueil et présentation « À propos »."
+      />
+      <Panel title="Section d'accueil (hero)">
         <HeroForm initial={heroInitial} />
-      </section>
-
-      <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-        <h2 className="text-lg font-bold mb-5">Section About</h2>
+      </Panel>
+      <Panel title="À propos">
         <ProfileForm initial={profileInitial} />
-      </section>
-    </div>
+      </Panel>
+    </>
   );
 }

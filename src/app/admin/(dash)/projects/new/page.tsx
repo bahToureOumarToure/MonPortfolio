@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { PageHeader } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/auth/admin";
 import ProjectForm from "@/components/admin/ProjectForm";
 
@@ -8,15 +9,15 @@ export const dynamic = "force-dynamic";
 export default async function NewProjectPage() {
   await requireAdmin();
   return (
-    <div className="flex flex-col gap-6">
+    <>
       <Link
         href="/admin/projects"
-        className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm w-fit"
+        className="-mb-4 inline-flex w-fit items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="w-4 h-4" /> Retour
+        <ArrowLeft className="h-4 w-4" /> Projets
       </Link>
-      <h1 className="text-3xl font-black tracking-tight">Nouveau projet</h1>
+      <PageHeader title="Nouveau projet" />
       <ProjectForm />
-    </div>
+    </>
   );
 }

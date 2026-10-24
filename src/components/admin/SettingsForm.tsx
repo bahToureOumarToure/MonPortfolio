@@ -1,13 +1,11 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { LoaderCircle, Save } from "lucide-react";
 import { updateSettings } from "@/lib/actions/singletons";
-
-const inputCls =
-  "bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-600 outline-none focus:border-red-500/50 w-full";
-const labelCls =
-  "text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 block";
+import { Button } from "@/components/ui/button";
+import { Input, Textarea } from "@/components/ui/input";
+import { Field, Panel } from "./ui";
+import { useAction, useUnsavedWarning } from "./use-action";
 
 export interface SettingsFormValues {
   siteTitle: string;
@@ -24,120 +22,122 @@ export default function SettingsForm({
 }: {
   initial: SettingsFormValues;
 }) {
-  const router = useRouter();
   const [v, setV] = useState(initial);
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const { pending, execute } = useAction();
+  useUnsavedWarning(dirty && !pending);
 
   function set<K extends keyof SettingsFormValues>(
     k: K,
     val: SettingsFormValues[K],
   ) {
     setV((p) => ({ ...p, [k]: val }));
+    setDirty(true);
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
-    setMsg(null);
-    try {
-      await updateSettings(v);
-      setMsg({ ok: true, text: "Paramètres enregistrés." });
-      router.refresh();
-    } catch (err) {
-      setMsg({
-        ok: false,
-        text: err instanceof Error ? err.message : "Échec.",
-      });
-    } finally {
-      setSaving(false);
-    }
+    const res = await execute(() => updateSettings(v), {
+      success: "Paramètres enregistrés.",
+    });
+    if (res.ok) setDirty(false);
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-4 max-w-3xl">
-      <div>
-        <label className={labelCls}>Titre du site</label>
-        <input
-          className={inputCls}
-          value={v.siteTitle}
-          onChange={(e) => set("siteTitle", e.target.value)}
-        />
-      </div>
-      <div>
-        <label className={labelCls}>Meta-description (SEO)</label>
-        <textarea
-          className={inputCls}
-          rows={2}
-          value={v.metaDescription}
-          onChange={(e) => set("metaDescription", e.target.value)}
-        />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className={labelCls}>Email public</label>
-          <input
-            className={inputCls}
-            value={v.contactEmail}
-            onChange={(e) => set("contactEmail", e.target.value)}
-          />
+    <form onSubmit={submit} className="flex flex-col gap-6">
+      <Panel
+        title="Coordonnées"
+        description="Affichées dans « À propos », « Contact » et le pied de page."
+      >
+        <div className="grid gap-5 sm:grid-cols-3">
+          <Field label="Email public" htmlFor="st-email">
+            <Input
+              id="st-email"
+              type="email"
+              value={v.contactEmail}
+              onChange={(e) => set("contactEmail", e.target.value)}
+            />
+          </Field>
+          <Field label="Téléphone" htmlFor="st-phone">
+            <Input
+              id="st-phone"
+              type="tel"
+              value={v.phone}
+              onChange={(e) => set("phone", e.target.value)}
+            />
+          </Field>
+          <Field label="Localisation" htmlFor="st-addr">
+            <Input
+              id="st-addr"
+              value={v.address}
+              onChange={(e) => set("address", e.target.value)}
+            />
+          </Field>
         </div>
-        <div>
-          <label className={labelCls}>Téléphone</label>
-          <input
-            className={inputCls}
-            value={v.phone}
-            onChange={(e) => set("phone", e.target.value)}
-          />
-        </div>
-        <div>
-          <label className={labelCls}>Adresse</label>
-          <input
-            className={inputCls}
-            value={v.address}
-            onChange={(e) => set("address", e.target.value)}
-          />
-        </div>
-      </div>
-      <div>
-        <label className={labelCls}>Texte du footer</label>
-        <textarea
-          className={inputCls}
-          rows={2}
-          value={v.footerTagline}
-          onChange={(e) => set("footerTagline", e.target.value)}
-        />
-      </div>
-      <div>
-        <label className={labelCls}>
-          Lien CV externe (utilisé si aucun fichier CV n'est publié)
-        </label>
-        <input
-          className={inputCls}
-          value={v.resumeExternalUrl}
-          onChange={(e) => set("resumeExternalUrl", e.target.value)}
-          placeholder="https://drive.google.com/…"
-        />
-      </div>
+      </Panel>
 
-      <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={saving}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-900 text-white font-bold text-sm uppercase tracking-widest disabled:opacity-50 hover:scale-[1.02] transition-transform"
-        >
-          {saving ? (
-            <LoaderCircle className="w-4 h-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
-          Enregistrer
-        </button>
-        {msg && (
-          <span className={msg.ok ? "text-emerald-400" : "text-red-400"}>
-            {msg.text}
+      <Panel title="Référencement & pied de page">
+        <div className="grid gap-5">
+          <Field
+            label="Titre du site"
+            htmlFor="st-title"
+            hint="Titre affiché dans l'onglet et les résultats Google."
+          >
+            <Input
+              id="st-title"
+              value={v.siteTitle}
+              onChange={(e) => set("siteTitle", e.target.value)}
+              maxLength={160}
+            />
+          </Field>
+          <Field
+            label="Méta-description"
+            htmlFor="st-meta"
+            hint={`Résumé pour Google et les partages (${v.metaDescription.length}/320 — idéalement 150 à 160).`}
+          >
+            <Textarea
+              id="st-meta"
+              rows={3}
+              value={v.metaDescription}
+              onChange={(e) => set("metaDescription", e.target.value)}
+              maxLength={320}
+            />
+          </Field>
+          <Field label="Texte du pied de page" htmlFor="st-footer">
+            <Textarea
+              id="st-footer"
+              rows={2}
+              value={v.footerTagline}
+              onChange={(e) => set("footerTagline", e.target.value)}
+              maxLength={400}
+            />
+          </Field>
+          <Field
+            label="Lien CV externe (secours)"
+            htmlFor="st-cv"
+            hint="Utilisé seulement si aucun fichier CV n'est publié ci-dessous."
+          >
+            <Input
+              id="st-cv"
+              type="url"
+              value={v.resumeExternalUrl}
+              onChange={(e) => set("resumeExternalUrl", e.target.value)}
+              placeholder="https://drive.google.com/…"
+            />
+          </Field>
+        </div>
+      </Panel>
+
+      <div className="flex items-center justify-end gap-3">
+        {dirty && (
+          <span className="mr-auto text-xs text-muted-foreground">
+            Modifications non enregistrées
           </span>
         )}
+        <Button type="submit" disabled={pending}>
+          {pending ? <LoaderCircle className="animate-spin" /> : <Save />}
+          Enregistrer
+        </Button>
       </div>
     </form>
   );

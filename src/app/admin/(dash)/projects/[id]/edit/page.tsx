@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { PageHeader } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/auth/admin";
 import { getAdminProject } from "@/lib/admin-queries";
 import ProjectForm, {
@@ -32,22 +33,19 @@ export default async function EditProjectPage({
     status: project.status ?? "",
     featured: project.featured,
     active: project.active,
-    order: project.order,
     images: project.images.map((i) => i.media.url),
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <>
       <Link
         href="/admin/projects"
-        className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm w-fit"
+        className="-mb-4 inline-flex w-fit items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="w-4 h-4" /> Retour
+        <ArrowLeft className="h-4 w-4" /> Projets
       </Link>
-      <h1 className="text-3xl font-black tracking-tight">
-        Éditer : {project.name}
-      </h1>
+      <PageHeader title={project.name} description="Modifier le projet" />
       <ProjectForm projectId={project.id} initial={initial} />
-    </div>
+    </>
   );
 }

@@ -1,14 +1,31 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { Upload, ImagePlus, X, Star, LoaderCircle, Check } from "lucide-react";
-import { uploadFile } from "@/lib/upload-client";
-import { listMedia, type MediaDTO } from "@/lib/actions/media";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ImagePlus,
+  LoaderCircle,
+  Search,
+  Star,
+  X,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { listMedia } from "@/lib/actions/media";
+import type { MediaDTO } from "@/lib/media-dto";
 import {
   SLOT,
-  ratioMismatch,
   describeOrientation,
+  ratioMismatch,
   type SlotAspect,
 } from "@/lib/media-format";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import Dialog from "./Dialog";
+import Thumb from "./Thumb";
+import { DropZone, UploadQueue } from "./DropZone";
+import { move } from "./use-action";
+import { useUploader } from "./use-uploader";
 
 interface Props {
   value: string | string[];
@@ -17,6 +34,7 @@ interface Props {
   aspect?: SlotAspect;
 }
 
+/** Sélection d'image(s) : upload direct (glisser-déposer) ou choix dans la médiathèque. */
 export default function MediaPicker({
   value,
   onChange,
@@ -28,228 +46,279 @@ export default function MediaPicker({
     : value
       ? [value as string]
       : [];
-
-  const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [libOpen, setLibOpen] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const uploader = useUploader("IMAGE");
 
   function commit(next: string[]) {
     onChange(multiple ? next : (next[0] ?? ""));
   }
-  function addUrl(url: string) {
-    if (selected.includes(url)) return;
-    commit(multiple ? [...selected, url] : [url]);
-  }
-  function removeUrl(url: string) {
-    commit(selected.filter((u) => u !== url));
-  }
-  function makePrimary(url: string) {
-    commit([url, ...selected.filter((u) => u !== url)]);
+
+  function checkRatio(media: MediaDTO) {
+    setWarning(
+      ratioMismatch(media.width, media.height, aspect)
+        ? `« ${media.filename} » est en ${describeOrientation(media.width, media.height)} : elle sera recadrée au format ${SLOT[aspect].label}.`
+        : null,
+    );
   }
 
-  async function onFiles(files: FileList | null) {
-    if (!files || files.length === 0) return;
-    setBusy(true);
-    setError(null);
-    setWarning(null);
-    setProgress(0);
-    try {
-      const uploaded: string[] = [];
-      let mismatch = false;
-      for (const file of Array.from(files)) {
-        const media = await uploadFile(file, "IMAGE", (p) =>
-          setProgress(p.percentage),
-        );
-        uploaded.push(media.url);
-        if (ratioMismatch(media.width, media.height, aspect)) {
-          mismatch = true;
-          setWarning(
-            `Image en ${describeOrientation(media.width, media.height)} : elle sera recadrée au format ${SLOT[aspect].label} de cet emplacement.`,
-          );
-        }
-        if (!multiple) break;
-      }
-      if (!mismatch) setWarning(null);
-      commit(multiple ? [...selected, ...uploaded] : [uploaded[0]]);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Échec de l'upload.");
-    } finally {
-      setBusy(false);
-      setProgress(null);
-      if (fileRef.current) fileRef.current.value = "";
+  async function onFiles(files: File[]) {
+    const uploaded = await uploader.uploadAll(files);
+    if (uploaded.length === 0) return;
+    uploaded.forEach(checkRatio);
+    const urls = uploaded.map((m) => m.url);
+    commit(
+      multiple
+        ? [...selected, ...urls.filter((u) => !selected.includes(u))]
+        : [urls[0]],
+    );
+  }
+
+  function pick(media: MediaDTO) {
+    checkRatio(media);
+    if (multiple) {
+      commit(
+        selected.includes(media.url)
+          ? selected.filter((u) => u !== media.url)
+          : [...selected, media.url],
+      );
+    } else {
+      commit([media.url]);
+      setLibOpen(false);
     }
   }
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Aperçu de la sélection */}
       {selected.length > 0 && (
-        <div className="flex flex-wrap gap-3">
+        <ul className="flex flex-wrap gap-3">
           {selected.map((url, i) => (
-            <div
+            <li
               key={url}
-              className={`relative w-28 ${SLOT[aspect].cls} rounded-lg overflow-hidden border border-white/10 bg-[#0a0a0a] group`}
+              className={cn(
+                "group relative w-32 overflow-hidden rounded-lg border bg-muted",
+                SLOT[aspect].cls,
+                multiple &&
+                  i === 0 &&
+                  "ring-2 ring-primary ring-offset-2 ring-offset-background",
+              )}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="" className="w-full h-full object-cover" />
+              <Thumb src={url} showMissingLabel />
               {multiple && i === 0 && (
-                <span className="absolute top-1 left-1 text-[9px] font-bold bg-red-600 text-white px-1.5 py-0.5 rounded flex items-center gap-1">
-                  <Star className="w-2.5 h-2.5" /> Principale
+                <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">
+                  <Star className="h-2.5 w-2.5" /> Couverture
                 </span>
               )}
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                {multiple && i !== 0 && (
-                  <button
-                    type="button"
-                    onClick={() => makePrimary(url)}
-                    title="Définir comme principale"
-                    className="p-1.5 rounded bg-white/10 hover:bg-white/20 text-white"
-                  >
-                    <Star className="w-3.5 h-3.5" />
-                  </button>
+              <div className="absolute inset-x-0 bottom-0 flex justify-center gap-1 bg-gradient-to-t from-black/60 to-transparent p-1.5 opacity-100 transition-opacity sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100">
+                {multiple && i > 0 && (
+                  <>
+                    <IconAction
+                      label="Déplacer à gauche"
+                      onClick={() => commit(move(selected, i, i - 1))}
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                    </IconAction>
+                    <IconAction
+                      label="Définir comme couverture"
+                      onClick={() => commit(move(selected, i, 0))}
+                    >
+                      <Star className="h-3.5 w-3.5" />
+                    </IconAction>
+                  </>
                 )}
-                <button
-                  type="button"
-                  onClick={() => removeUrl(url)}
-                  title="Retirer"
-                  className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"
+                {multiple && i < selected.length - 1 && (
+                  <IconAction
+                    label="Déplacer à droite"
+                    onClick={() => commit(move(selected, i, i + 1))}
+                  >
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </IconAction>
+                )}
+                <IconAction
+                  label="Retirer"
+                  danger
+                  onClick={() => commit(selected.filter((u) => u !== url))}
                 >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                  <X className="h-3.5 w-3.5" />
+                </IconAction>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
 
-      {/* Actions */}
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
+      <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-stretch">
+        <DropZone
+          kind="IMAGE"
           multiple={multiple}
-          className="hidden"
-          onChange={(e) => onFiles(e.target.files)}
+          compact
+          onFiles={onFiles}
+          disabled={uploader.busy}
         />
-        <button
+        <Button
           type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={busy}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-red-500/40 text-sm font-medium disabled:opacity-50"
-        >
-          {busy ? (
-            <LoaderCircle className="w-4 h-4 animate-spin" />
-          ) : (
-            <Upload className="w-4 h-4" />
-          )}
-          {busy ? `Téléversement… ${progress ?? 0}%` : "Téléverser"}
-        </button>
-        <button
-          type="button"
+          variant="outline"
+          className="h-auto py-3"
           onClick={() => setLibOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-red-500/40 text-sm font-medium"
         >
-          <ImagePlus className="w-4 h-4" />
-          Médiathèque
-        </button>
+          <ImagePlus /> Médiathèque
+        </Button>
       </div>
-      {error && <p className="text-sm text-red-400">{error}</p>}
-      {warning && <p className="text-xs text-amber-400/90">⚠ {warning}</p>}
-      <p className="text-[11px] text-slate-500">
-        Format attendu ici : {SLOT[aspect].label}.
+      <UploadQueue items={uploader.items} onClear={uploader.clearErrors} />
+      {warning && <p className="text-xs text-warning">⚠ {warning}</p>}
+      <p className="text-xs text-muted-foreground">
+        Format conseillé : {SLOT[aspect].label}.
       </p>
 
-      {libOpen && (
-        <LibraryModal
-          onClose={() => setLibOpen(false)}
-          selected={selected}
-          onPick={(url) => {
-            addUrl(url);
-            if (!multiple) setLibOpen(false);
-          }}
-        />
-      )}
+      <LibraryDialog
+        open={libOpen}
+        onClose={() => setLibOpen(false)}
+        selected={selected}
+        multiple={!!multiple}
+        onPick={pick}
+      />
     </div>
   );
 }
 
-function LibraryModal({
+function IconAction({
+  label,
+  onClick,
+  danger,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      onClick={onClick}
+      className={cn(
+        "rounded bg-white/90 p-1 text-zinc-900 shadow hover:bg-white",
+        danger &&
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function LibraryDialog({
+  open,
   onClose,
   onPick,
   selected,
+  multiple,
 }: {
+  open: boolean;
   onClose: () => void;
-  onPick: (url: string) => void;
+  onPick: (m: MediaDTO) => void;
   selected: string[];
+  multiple: boolean;
 }) {
   const [items, setItems] = useState<MediaDTO[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
+    if (!open) return;
+    setItems(null);
+    setError(null);
     listMedia("IMAGE")
-      .then(setItems)
-      .catch(() => setItems([]));
-  }, []);
+      .then((res) =>
+        res.ok ? setItems(res.data) : (setError(res.error), setItems([])),
+      )
+      .catch(() => {
+        setError("Chargement impossible.");
+        setItems([]);
+      });
+  }, [open]);
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return (items ?? []).filter(
+      (m) => !q || m.filename.toLowerCase().includes(q),
+    );
+  }, [items, query]);
 
   return (
-    <div
-      className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={onClose}
+    <Dialog
+      open={open}
+      onClose={onClose}
+      size="lg"
+      title="Médiathèque"
+      description={
+        multiple
+          ? "Clique pour ajouter ou retirer des images."
+          : "Clique sur une image pour la choisir."
+      }
     >
-      <div
-        className="w-full max-w-3xl max-h-[80vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0a0a] p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-white">Médiathèque</h3>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5"
-          >
-            <X className="w-5 h-5" />
-          </button>
+      <div className="flex flex-col gap-4">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher une image…"
+            aria-label="Rechercher une image"
+            className="pl-9"
+          />
         </div>
         {items === null ? (
-          <p className="text-slate-500 text-sm flex items-center gap-2">
-            <LoaderCircle className="w-4 h-4 animate-spin" /> Chargement…
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <LoaderCircle className="h-4 w-4 animate-spin" /> Chargement…
           </p>
-        ) : items.length === 0 ? (
-          <p className="text-slate-500 text-sm">
-            Aucune image. Téléverse depuis le bouton « Téléverser ».
+        ) : error ? (
+          <p className="text-sm text-destructive">{error}</p>
+        ) : visible.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {items.length === 0
+              ? "Aucune image. Téléverse-en depuis le formulaire."
+              : "Aucun résultat."}
           </p>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-            {items.map((m) => {
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {visible.map((m) => {
               const isSel = selected.includes(m.url);
               return (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => onPick(m.url)}
-                  className={`relative aspect-video rounded-lg overflow-hidden border ${
-                    isSel ? "border-red-500" : "border-white/10"
-                  } bg-[#050505] hover:border-red-500/60`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={m.url}
-                    alt={m.alt ?? m.filename}
-                    className="w-full h-full object-cover"
-                  />
-                  {isSel && (
-                    <span className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-0.5">
-                      <Check className="w-3 h-3" />
-                    </span>
-                  )}
-                </button>
+                <li key={m.id}>
+                  <button
+                    type="button"
+                    onClick={() => onPick(m)}
+                    aria-pressed={isSel}
+                    title={m.filename}
+                    className={cn(
+                      "relative block aspect-video w-full overflow-hidden rounded-lg border bg-muted transition-shadow hover:ring-2 hover:ring-primary/40",
+                      isSel && "ring-2 ring-primary",
+                    )}
+                  >
+                    <Thumb src={m.url} alt={m.alt ?? m.filename} />
+                    {isSel && (
+                      <span className="absolute right-1.5 top-1.5 rounded-full bg-primary p-0.5 text-primary-foreground">
+                        <Check className="h-3 w-3" />
+                      </span>
+                    )}
+                  </button>
+                </li>
               );
             })}
+          </ul>
+        )}
+        {multiple && (
+          <div className="flex justify-end">
+            <Button type="button" onClick={onClose}>
+              Terminé
+            </Button>
           </div>
         )}
       </div>
-    </div>
+    </Dialog>
   );
 }

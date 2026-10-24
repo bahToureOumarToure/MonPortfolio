@@ -1,31 +1,28 @@
 import { requireAdmin } from "@/lib/auth/admin";
 import { getAdminExperiences } from "@/lib/admin-queries";
-import ExperienceManager, {
-  type ExperienceRow,
-} from "@/components/admin/ExperienceManager";
+import ExperienceManager from "@/components/admin/ExperienceManager";
+import { PageHeader } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
 export default async function ExperienceAdminPage() {
   await requireAdmin();
-  const items = await getAdminExperiences().catch(() => []);
-  const rows: ExperienceRow[] = items.map((e) => ({
-    id: e.id,
-    title: e.title,
-    company: e.company,
-    duration: e.duration,
-    details: e.details,
-    order: e.order,
-    active: e.active,
+  const rows = (await getAdminExperiences().catch(() => [])).map((r) => ({
+    id: r.id,
+    title: r.title,
+    subtitle: r.company,
+    duration: r.duration,
+    details: r.details,
+    active: r.active,
   }));
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight">Stage / Parcours</h1>
-        <p className="text-slate-400 mt-1">{rows.length} entrée(s)</p>
-      </div>
+    <>
+      <PageHeader
+        title="Expérience"
+        description="Stages, missions et recherches en cours — section « Parcours » du site."
+      />
       <ExperienceManager initial={rows} />
-    </div>
+    </>
   );
 }
