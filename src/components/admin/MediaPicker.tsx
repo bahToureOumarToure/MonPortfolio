@@ -5,6 +5,7 @@ import {
   ArrowRight,
   Check,
   ImagePlus,
+  Link2,
   LoaderCircle,
   Search,
   Star,
@@ -23,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Dialog from "./Dialog";
 import Thumb from "./Thumb";
+import ImageLinkDialog from "./ImageLinkDialog";
 import { DropZone, UploadQueue } from "./DropZone";
 import { move } from "./use-action";
 import { useUploader } from "./use-uploader";
@@ -48,6 +50,7 @@ export default function MediaPicker({
       : [];
   const [warning, setWarning] = useState<string | null>(null);
   const [libOpen, setLibOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
   const uploader = useUploader("IMAGE");
 
   function commit(next: string[]) {
@@ -155,14 +158,22 @@ export default function MediaPicker({
           onFiles={onFiles}
           disabled={uploader.busy}
         />
-        <Button
-          type="button"
-          variant="outline"
-          className="h-auto py-3"
-          onClick={() => setLibOpen(true)}
-        >
-          <ImagePlus /> Médiathèque
-        </Button>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-1">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setLibOpen(true)}
+          >
+            <ImagePlus /> Médiathèque
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setLinkOpen(true)}
+          >
+            <Link2 /> Par lien
+          </Button>
+        </div>
       </div>
       <UploadQueue items={uploader.items} onClear={uploader.clearErrors} />
       {warning && <p className="text-xs text-warning">⚠ {warning}</p>}
@@ -170,6 +181,18 @@ export default function MediaPicker({
         Format conseillé : {SLOT[aspect].label}.
       </p>
 
+      <ImageLinkDialog
+        open={linkOpen}
+        onClose={() => setLinkOpen(false)}
+        onAdded={(media) => {
+          checkRatio(media);
+          commit(
+            multiple
+              ? [...selected.filter((u) => u !== media.url), media.url]
+              : [media.url],
+          );
+        }}
+      />
       <LibraryDialog
         open={libOpen}
         onClose={() => setLibOpen(false)}

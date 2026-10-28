@@ -1,7 +1,13 @@
 "use server";
 import { prisma } from "@/lib/db";
-import { mediaAltInput, registerMediaInput } from "@/lib/validation/media";
-import { deleteBlob } from "@/lib/blob";
+import {
+  externalImageInput,
+  mediaAltInput,
+  registerMediaInput,
+} from "@/lib/validation/media";
+import { put } from "@vercel/blob";
+import { blobMode, deleteBlob, isBlobUrl } from "@/lib/blob";
+import { UPLOAD_RULES } from "@/lib/upload-rules";
 import {
   assertAdmin,
   audit,
@@ -30,6 +36,92 @@ export async function registerMedia(
         height: d.height ?? null,
         kind: d.kind,
         alt: d.alt ?? null,
+      },
+    });
+    await audit("media.create", "Media", media.id);
+    return toMediaDTO(media, 0);
+  });
+}
+
+/**
+ * Ajoute une image à partir d'un lien https. Si un stockage Blob est relié,
+ * l'image est copiée dedans (lien durable et optimisé) ; sinon le lien est
+ * conservé tel quel. Le lien doit pointer directement vers une image.
+ */
+export async function registerExternalImage(
+  input: unknown,
+): Promise<ActionResult<MediaDTO>> {
+  return run(async () => {
+    await assertAdmin();
+    const { url, alt } = externalImageInput.parse(input);
+
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        redirect: "follow",
+        signal: AbortSignal.timeout(10_000),
+        headers: { Accept: "image/*" },
+      });
+    } catch {
+      throw new UserFacingError(
+        "Ce lien est injoignable. Vérifie l'adresse et réessaie.",
+      );
+    }
+    const type = (res.headers.get("content-type") ?? "")
+      .split(";")[0]
+      .trim()
+      .toLowerCase();
+    if (!res.ok || !type.startsWith("image/")) {
+      await res.body?.cancel().catch(() => {});
+      throw new UserFacingError(
+        "Ce lien n'affiche pas directement une image. Ouvre l'image, fais « Copier l'adresse de l'image » et colle ce lien.",
+      );
+    }
+
+    const filename =
+      decodeURIComponent(
+        new URL(url).pathname.split("/").filter(Boolean).pop() ?? "image",
+      ).slice(0, 200) || "image";
+    let storedUrl = url;
+    let pathname: string | null = null;
+    let size = 0;
+
+    const canCopy =
+      blobMode() !== "none" &&
+      (UPLOAD_RULES.IMAGE.types as readonly string[]).includes(type);
+    if (canCopy) {
+      const data = await res.arrayBuffer();
+      size = data.byteLength;
+      if (size <= UPLOAD_RULES.IMAGE.maxBytes) {
+        try {
+          const blob = await put(
+            `images/${filename.replace(/[^\w.-]+/g, "-")}`,
+            data,
+            {
+              access: "public",
+              addRandomSuffix: true,
+              contentType: type,
+            },
+          );
+          storedUrl = blob.url;
+          pathname = blob.pathname;
+        } catch {
+          /* stockage indisponible : on garde le lien d'origine */
+        }
+      }
+    } else {
+      await res.body?.cancel().catch(() => {});
+    }
+
+    const media = await prisma.media.create({
+      data: {
+        url: storedUrl,
+        pathname,
+        filename,
+        mimeType: type,
+        size,
+        kind: "IMAGE",
+        alt: alt || null,
       },
     });
     await audit("media.create", "Media", media.id);
@@ -95,7 +187,7 @@ export async function deleteMedia(id: string): Promise<ActionResult> {
     ]);
 
     // Les fichiers /public historiques ne sont pas sur Blob : rien à supprimer.
-    if (media.pathname || media.url.startsWith("https://")) {
+    if (media.pathname || isBlobUrl(media.url)) {
       await deleteBlob(media.pathname ?? media.url);
     }
     await audit("media.delete", "Media", id);

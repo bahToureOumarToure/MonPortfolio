@@ -37,19 +37,27 @@ export function describeOrientation(
   return "carré";
 }
 
-/**
- * Sources d'image acceptées par next/image dans ce projet : fichiers locaux
- * (/public) ou Vercel Blob. Toute autre origine ferait planter le rendu.
- */
+/** Adresse d'image acceptée : fichier local (/public) ou lien https. */
 export function isAllowedImageUrl(url: string): boolean {
   const u = url.trim();
   if (/^\/(?!\/)/.test(u)) return true;
   try {
-    const { protocol, hostname } = new URL(u);
-    return (
-      protocol === "https:" &&
-      hostname.endsWith(".public.blob.vercel-storage.com")
-    );
+    return new URL(u).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Images que next/image peut optimiser (déclarées dans next.config) : fichiers
+ * locaux et Vercel Blob. Les autres liens sont affichés tels quels
+ * (`unoptimized`), sinon next/image refuserait de les rendre.
+ */
+export function isOptimizableImageUrl(url: string | null | undefined): boolean {
+  if (!url) return true;
+  if (/^\/(?!\/)/.test(url)) return true;
+  try {
+    return new URL(url).hostname.endsWith(".public.blob.vercel-storage.com");
   } catch {
     return false;
   }

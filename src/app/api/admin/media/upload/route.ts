@@ -1,19 +1,10 @@
 import { NextResponse } from "next/server";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { getSessionUser } from "@/lib/auth/session";
+import { UPLOAD_RULES } from "@/lib/upload-rules";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const IMAGE_TYPES = [
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-  "image/gif",
-  "image/avif",
-];
-const DOC_TYPES = ["application/pdf"];
-const MB = 1024 * 1024;
 
 // Autorise l'upload client Vercel Blob : contrôle admin + restriction
 // type/taille imposée côté serveur (Blob refuse tout ce qui n'est pas listé).
@@ -25,7 +16,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json(
       {
         error:
-          "Stockage indisponible : BLOB_READ_WRITE_TOKEN n'est pas défini sur le serveur. Ajoute cette variable d'environnement (locale et/ou Production Vercel).",
+          "Upload direct indisponible : BLOB_READ_WRITE_TOKEN n'est pas défini sur le serveur.",
       },
       { status: 503 },
     );
@@ -41,17 +32,18 @@ export async function POST(request: Request): Promise<NextResponse> {
         const user = await getSessionUser();
         if (!user) throw new Error("unauthorized");
 
-        const isDoc = clientPayload === "DOCUMENT";
+        const rule =
+          UPLOAD_RULES[clientPayload === "DOCUMENT" ? "DOCUMENT" : "IMAGE"];
         return {
-          allowedContentTypes: isDoc ? DOC_TYPES : IMAGE_TYPES,
-          maximumSizeInBytes: isDoc ? 10 * MB : 5 * MB,
+          allowedContentTypes: [...rule.types],
+          maximumSizeInBytes: rule.maxBytes,
           addRandomSuffix: true,
           tokenPayload: JSON.stringify({ userId: user.id }),
         };
       },
-      // Ne fait rien ici : le webhook Blob ne joint pas localhost.
-      // La ligne Media est créée côté client via l'action registerMedia.
-      onUploadCompleted: async () => {},
+      // Pas de webhook de fin d'upload : la ligne Media est créée côté client
+      // via l'action registerMedia (un webhook serait de toute façon bloqué
+      // par le middleware admin, faute de cookie de session).
     });
     return NextResponse.json(json);
   } catch (error) {

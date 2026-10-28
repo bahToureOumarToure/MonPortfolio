@@ -37,7 +37,7 @@ export const projectInput = z.object({
         .trim()
         .refine(
           isAllowedImageUrl,
-          "Image : choisis un fichier de la médiathèque.",
+          "Image : lien invalide (https://… ou fichier de la médiathèque).",
         ),
     )
     .max(30)

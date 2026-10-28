@@ -23,3 +23,22 @@ export type RegisterMediaInput = z.infer<typeof registerMediaInput>;
 export const mediaAltInput = z.object({
   alt: z.string().trim().max(200),
 });
+
+export const externalImageInput = z.object({
+  url: z
+    .string()
+    .trim()
+    .max(1000)
+    .refine((v) => {
+      try {
+        const u = new URL(v);
+        return (
+          u.protocol === "https:" &&
+          !/^(localhost|127\.|10\.|192\.168\.|0\.)/.test(u.hostname)
+        );
+      } catch {
+        return false;
+      }
+    }, "Lien invalide : colle une adresse https:// d'image."),
+  alt: z.string().trim().max(200).default(""),
+});

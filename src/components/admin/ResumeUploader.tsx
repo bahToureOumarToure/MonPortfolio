@@ -4,6 +4,7 @@ import { setPublishedResume } from "@/lib/actions/media";
 import { Button } from "@/components/ui/button";
 import { DropZone, UploadQueue } from "./DropZone";
 import { Panel } from "./ui";
+import StorageStatus from "./StorageStatus";
 import { useAction } from "./use-action";
 import { useUploader } from "./use-uploader";
 
@@ -39,6 +40,7 @@ export default function ResumeUploader({
       description="Le bouton « CV » du site pointe automatiquement vers ce fichier."
     >
       <div className="flex flex-col gap-4">
+        <StorageStatus />
         {current ? (
           <div className="flex items-center gap-3 rounded-lg border bg-background px-4 py-3">
             <FileText className="h-5 w-5 shrink-0 text-primary" />
