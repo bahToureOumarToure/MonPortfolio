@@ -7,6 +7,8 @@ export const SKILL_CATEGORIES = [
   "DATA_IA",
   "MOBILE",
   "TOOLS",
+  "DEVOPS",
+  "SOFT_SKILLS",
 ] as const;
 
 export type SkillCategoryKey = (typeof SKILL_CATEGORIES)[number];
@@ -19,4 +21,6 @@ export const SKILL_CATEGORY_LABELS: Record<SkillCategoryKey, string> = {
   DATA_IA: "Data & IA",
   MOBILE: "Mobile",
   TOOLS: "Tools",
+  DEVOPS: "DevOps",
+  SOFT_SKILLS: "Soft skills",
 };

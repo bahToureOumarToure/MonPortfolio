@@ -23,6 +23,8 @@ const CATEGORY_MAP: Record<string, SkillCategory> = {
   "Data & IA": "DATA_IA",
   Mobile: "MOBILE",
   Tools: "TOOLS",
+  DevOps: "DEVOPS",
+  "Soft skills": "SOFT_SKILLS",
 };
 
 function basename(p: string): string {

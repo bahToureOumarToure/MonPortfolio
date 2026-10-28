@@ -23,9 +23,33 @@ import {
   SiCplusplus,
   SiC,
   SiOpenai,
+  SiDocker,
+  SiKubernetes,
+  SiJenkins,
+  SiGithubactions,
+  SiLinux,
+  SiLangchain,
+  SiTensorflow,
 } from "react-icons/si";
 import { IconType } from "react-icons";
-import { TbBrandCSharp, TbCode, TbSql } from "react-icons/tb";
+import {
+  TbBrain,
+  TbBrandCSharp,
+  TbBook,
+  TbBulb,
+  TbCode,
+  TbCompass,
+  TbEar,
+  TbFlame,
+  TbHeartHandshake,
+  TbInfinity,
+  TbNetwork,
+  TbPhoto,
+  TbRefresh,
+  TbSql,
+  TbUsersGroup,
+  TbVectorBezier,
+} from "react-icons/tb";
 import { FaDatabase, FaBrain, FaChartBar } from "react-icons/fa";
 
 // ============================================
@@ -141,7 +165,64 @@ export const getSkillIcon = (skill: string): IconType => {
       return SiCanva;
     case "illustrator":
     case "adobe illustrator":
+      return TbVectorBezier;
     case "photoshop":
+    case "adobe photoshop":
+      return TbPhoto;
+
+    // --- DevOps ---
+    case "docker":
+      return SiDocker;
+    case "kubernetes":
+    case "k8s":
+      return SiKubernetes;
+    case "jenkins":
+      return SiJenkins;
+    case "github actions":
+      return SiGithubactions;
+    case "ci/cd":
+    case "cicd":
+      return TbInfinity;
+    case "linux":
+      return SiLinux;
+
+    // --- IA ---
+    case "machine learning":
+    case "ml":
+      return TbNetwork;
+    case "deep learning":
+    case "dl":
+      return TbBrain;
+    case "langchain":
+      return SiLangchain;
+    case "tensorflow":
+      return SiTensorflow;
+
+    // --- Soft skills ---
+    case "agile":
+    case "agile / scrum":
+    case "scrum":
+      return TbRefresh;
+    case "écoute active":
+    case "ecoute active":
+      return TbEar;
+    case "empathique":
+    case "empathie":
+      return TbHeartHandshake;
+    case "curieux":
+    case "curiosité":
+      return TbBulb;
+    case "motivé":
+    case "motivation":
+      return TbFlame;
+    case "apprentissage continu":
+      return TbBook;
+    case "esprit d'équipe":
+    case "travail en équipe":
+      return TbUsersGroup;
+    case "autonome":
+    case "autonomie":
+      return TbCompass;
 
     default:
       return TbCode;
@@ -266,7 +347,25 @@ export const getSkillColor = (skill: string): string => {
     case "adobe photoshop":
       return "#31A8FF"; // Bleu Photoshop
 
+    // --- DevOps ---
+    case "docker":
+      return "#2496ED";
+    case "kubernetes":
+    case "k8s":
+      return "#326CE5";
+    case "jenkins":
+      return "#D24939";
+    case "github actions":
+      return "#2088FF";
+    case "linux":
+      return "#E8A317";
+
+    // --- IA ---
+    case "tensorflow":
+      return "#FF6F00";
+
+    // Pas de couleur de marque : l'icône prend la couleur d'accent du thème.
     default:
-      return "#EF4444";
+      return "";
   }
 };

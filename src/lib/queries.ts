@@ -26,6 +26,14 @@ import { educations as educationsData } from "../../utils/Data/educations";
 import { getSocialColor } from "../../utils/social-icons";
 import { DEFAULT_THEME, sanitizeTheme, type ThemeVM } from "./theme";
 
+/**
+ * Version du cache de données. Le Data Cache de Vercel survit aux
+ * redéploiements : à incrémenter quand une migration SQL de prisma/sql modifie
+ * des données (sinon l'ancien contenu resterait servi jusqu'à la prochaine
+ * modification dans l'admin).
+ */
+const CACHE_VERSION = "2026-10-28";
+
 export const CONTENT_TAGS = {
   hero: "hero",
   profile: "profile",
@@ -46,6 +54,8 @@ const CATEGORY_LABEL: Record<PrismaSkillCategory, SkillCategory> = {
   DATA_IA: "Data & IA",
   MOBILE: "Mobile",
   TOOLS: "Tools",
+  DEVOPS: "DevOps",
+  SOFT_SKILLS: "Soft skills",
 };
 
 const DEFAULT_SECTIONS: SettingsVM["sections"] = {
@@ -215,7 +225,7 @@ export const getTheme = unstable_cache(
       return DEFAULT_THEME;
     }
   },
-  ["theme"],
+  ["theme", CACHE_VERSION],
   { tags: [CONTENT_TAGS.theme] },
 );
 
@@ -243,7 +253,7 @@ export const getSettings = unstable_cache(
       return defaultSettings();
     }
   },
-  ["settings"],
+  ["settings", CACHE_VERSION],
   { tags: [CONTENT_TAGS.settings] },
 );
 
@@ -276,7 +286,7 @@ export const getHero = unstable_cache(
       return defaultHero(personalData.resume);
     }
   },
-  ["hero"],
+  ["hero", CACHE_VERSION],
   { tags: [CONTENT_TAGS.hero, CONTENT_TAGS.settings] },
 );
 
@@ -299,7 +309,7 @@ export const getProfile = unstable_cache(
       return defaultProfile();
     }
   },
-  ["profile"],
+  ["profile", CACHE_VERSION],
   { tags: [CONTENT_TAGS.profile] },
 );
 
@@ -321,7 +331,7 @@ export const getSocialLinks = unstable_cache(
       return defaultSocials();
     }
   },
-  ["socials"],
+  ["socials", CACHE_VERSION],
   { tags: [CONTENT_TAGS.socials] },
 );
 
@@ -341,6 +351,8 @@ export const getSkillsGrouped = unstable_cache(
         "Data & IA": [],
         Mobile: [],
         Tools: [],
+        DevOps: [],
+        "Soft skills": [],
       };
       for (const s of skills) {
         const label = CATEGORY_LABEL[s.category];
@@ -355,7 +367,7 @@ export const getSkillsGrouped = unstable_cache(
       return defaultSkillsGrouped();
     }
   },
-  ["skills"],
+  ["skills", CACHE_VERSION],
   { tags: [CONTENT_TAGS.skills] },
 );
 
@@ -378,7 +390,7 @@ export const getExperiences = unstable_cache(
       return defaultExperiences();
     }
   },
-  ["experiences"],
+  ["experiences", CACHE_VERSION],
   { tags: [CONTENT_TAGS.experiences] },
 );
 
@@ -400,7 +412,7 @@ export const getEducations = unstable_cache(
       return defaultEducations();
     }
   },
-  ["educations"],
+  ["educations", CACHE_VERSION],
   { tags: [CONTENT_TAGS.educations] },
 );
 
@@ -461,7 +473,7 @@ export const getProjects = unstable_cache(
       return defaultProjects();
     }
   },
-  ["projects"],
+  ["projects", CACHE_VERSION],
   { tags: [CONTENT_TAGS.projects] },
 );
 
@@ -486,7 +498,7 @@ export function getProjectByLegacyId(id: number): Promise<ProjectVM | null> {
         return defaultProjects().find((x) => x.id === id) ?? null;
       }
     },
-    ["project", String(id)],
+    ["project", String(id), CACHE_VERSION],
     { tags: [CONTENT_TAGS.projects, `project:${id}`] },
   )();
 }

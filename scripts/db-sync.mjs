@@ -3,6 +3,8 @@
 // - Exécuté au build Vercel (VERCEL=1) ou à la demande (--force).
 // - Chaque fichier doit être idempotent (CREATE ... IF NOT EXISTS, etc.) et
 //   purement additif : ce script ne doit jamais pouvoir casser la prod.
+// - Les fichiers déjà appliqués sont notés dans la table _sql_migrations et
+//   ne sont plus rejoués (indispensable pour les migrations de données).
 // - Par défaut, un échec n'interrompt pas le build : le site garde ses
 //   replis (ex. thème par défaut). Avec --strict (CI), l'échec est bloquant.
 // - SKIP_DB_SYNC=1 désactive complètement l'étape.
@@ -45,16 +47,32 @@ function statements(sql) {
     .filter(Boolean);
 }
 
+// Journal des migrations appliquées (DDL identique au modèle Prisma SqlMigration).
+const LEDGER_DDL = `CREATE TABLE IF NOT EXISTS "_sql_migrations" (
+    "name" TEXT NOT NULL,
+    "appliedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "_sql_migrations_pkey" PRIMARY KEY ("name")
+)`;
+
 async function main() {
   const files = (await readdir(SQL_DIR)).filter((f) => f.endsWith(".sql")).sort();
   if (files.length === 0) return log("aucune migration.");
   const prisma = new PrismaClient({ datasourceUrl: url });
   try {
+    await prisma.$executeRawUnsafe(LEDGER_DDL);
+    const applied = new Set(
+      (await prisma.$queryRawUnsafe('SELECT "name" FROM "_sql_migrations"')).map((r) => r.name),
+    );
     for (const file of files) {
+      if (applied.has(file)) continue;
       const sql = await readFile(join(SQL_DIR, file), "utf8");
       for (const statement of statements(sql)) {
         await prisma.$executeRawUnsafe(statement);
       }
+      await prisma.$executeRawUnsafe(
+        'INSERT INTO "_sql_migrations" ("name") VALUES ($1) ON CONFLICT ("name") DO NOTHING',
+        file,
+      );
       log(`✓ ${file}`);
     }
   } finally {

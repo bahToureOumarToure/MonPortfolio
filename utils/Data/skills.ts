@@ -12,7 +12,9 @@ export type SkillCategory =
   | "Database"
   | "Data & IA"
   | "Mobile"
-  | "Tools";
+  | "Tools"
+  | "DevOps"
+  | "Soft skills";
 
 export const skillsData: Skill[] = [
   // --- Frontend ---
@@ -45,6 +47,10 @@ export const skillsData: Skill[] = [
   // --- Data & IA ---
   { name: "Power BI", category: "Data & IA" },
   { name: "IA", category: "Data & IA" },
+  { name: "Machine Learning", category: "Data & IA" },
+  { name: "Deep Learning", category: "Data & IA" },
+  { name: "LangChain", category: "Data & IA" },
+  { name: "TensorFlow", category: "Data & IA" },
 
   // --- Mobile ---
   { name: "Flutter", category: "Mobile" },
@@ -55,6 +61,24 @@ export const skillsData: Skill[] = [
   { name: "Canva", category: "Tools" },
   { name: "Illustrator", category: "Tools" },
   { name: "Photoshop", category: "Tools" },
+
+  // --- DevOps ---
+  { name: "Docker", category: "DevOps" },
+  { name: "Kubernetes", category: "DevOps" },
+  { name: "Jenkins", category: "DevOps" },
+  { name: "GitHub Actions", category: "DevOps" },
+  { name: "CI/CD", category: "DevOps" },
+  { name: "Linux", category: "DevOps" },
+
+  // --- Soft skills ---
+  { name: "Agile / Scrum", category: "Soft skills" },
+  { name: "Écoute active", category: "Soft skills" },
+  { name: "Empathique", category: "Soft skills" },
+  { name: "Curieux", category: "Soft skills" },
+  { name: "Motivé", category: "Soft skills" },
+  { name: "Apprentissage continu", category: "Soft skills" },
+  { name: "Esprit d'équipe", category: "Soft skills" },
+  { name: "Autonome", category: "Soft skills" },
 ];
 
 // Helper pour grouper par catégorie
@@ -67,6 +91,8 @@ export const getSkillsByCategory = () => {
     "Data & IA": [],
     Mobile: [],
     Tools: [],
+    DevOps: [],
+    "Soft skills": [],
   };
 
   skillsData.forEach((skill) => {

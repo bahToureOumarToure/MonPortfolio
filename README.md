@@ -36,7 +36,8 @@ Paramètres & CV, Sécurité. Chaque modification est en ligne immédiatement.
 (10 teintes prêtes ou couleur libre), arrondis, aperçu en direct. Tout le site et
 l'admin suivent ces réglages.
 
-**Uploads** — glisser-déposer, envoi multiple avec progression par fichier, validation
+**Uploads** — diagnostic du stockage dans l'admin, envoi direct (jeton Blob) ou via le
+serveur (store relié par OIDC), ajout d'image par lien, glisser-déposer, envoi multiple avec progression par fichier, validation
 avant envoi, redimensionnement + conversion WebP automatiques des photos lourdes,
 texte alternatif, recherche, « Utiliser pour… » (profil, hero, couverture de projet).
 
@@ -103,7 +104,8 @@ Premier accès admin : ouvrir `/admin/setup` (compte = `ADMIN_EMAIL`).
 ### Évolutions de la base de données
 
 Le schéma n'utilise pas `prisma migrate` : les évolutions passent par des fichiers SQL
-**additifs et idempotents** dans `prisma/sql/` (`CREATE TABLE IF NOT EXISTS`, ajout de
+**additifs et idempotents** dans `prisma/sql/` (règles détaillées dans `prisma/sql/README.md`),
+appliqués **une seule fois chacun** grâce au journal `_sql_migrations` (`CREATE TABLE IF NOT EXISTS`, ajout de
 colonne avec valeur par défaut…). Ils sont appliqués automatiquement au build Vercel
 par `scripts/db-sync.mjs`, avant `next build`.
 

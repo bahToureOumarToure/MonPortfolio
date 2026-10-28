@@ -99,6 +99,8 @@ enum SkillCategory {
   DATA_IA
   MOBILE
   TOOLS
+  DEVOPS
+  SOFT_SKILLS
 }
 
 model Skill {
@@ -276,4 +278,13 @@ model SiteTheme {
   accent    String   @default("#dc2626") // couleur d'accent (#rrggbb)
   radius    String   @default("lg") // "sm" | "md" | "lg" | "xl"
   updatedAt DateTime @updatedAt
+}
+
+// Journal des migrations SQL de prisma/sql déjà appliquées (scripts/db-sync.mjs) :
+// garantit qu'une migration de données ne s'exécute qu'une seule fois.
+model SqlMigration {
+  name      String   @id
+  appliedAt DateTime @default(now())
+
+  @@map("_sql_migrations")
 }
