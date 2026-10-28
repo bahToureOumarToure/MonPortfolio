@@ -4,6 +4,11 @@ import { PHASE_PRODUCTION_BUILD } from "next/constants.js";
 const nextConfig = {
   reactStrictMode: true,
   images: {
+    // CI uniquement (tests e2e sur `next start`) : l'optimiseur intégré de
+    // Next 15 reste bloqué pour une image dont une requête a été annulée par le
+    // navigateur, et toutes les requêtes suivantes vers cette image attendent
+    // indéfiniment. En prod, Vercel optimise les images lui-même : non concerné.
+    unoptimized: process.env.DISABLE_IMAGE_OPTIMIZATION === "1",
     remotePatterns: [
       {
         protocol: "https" as const,

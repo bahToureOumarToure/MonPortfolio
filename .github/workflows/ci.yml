@@ -24,6 +24,9 @@ env:
   AUTH_SECRET: ci-only-secret-not-used-in-production
   ADMIN_EMAIL: ci@example.com
   E2E_ADMIN_PASSWORD: ci-e2e-password-not-secret
+  # Voir next.config.ts : contourne un blocage de l'optimiseur d'images de
+  # `next start` (absent en prod, où Vercel optimise les images).
+  DISABLE_IMAGE_OPTIMIZATION: "1"
 
 jobs:
   quality:
