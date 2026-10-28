@@ -68,6 +68,45 @@ test.describe("Site public", () => {
     await expect(page.locator("h1")).toHaveText(name);
   });
 
+  test("compétences : défilement horizontal et nouvelles compétences", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const skills = page.locator("#skills");
+    await expect(skills.locator(".animate-marquee").first()).toBeAttached();
+    for (const name of [
+      "Docker",
+      "Kubernetes",
+      "LangChain",
+      "Écoute active",
+      "Apprentissage continu",
+    ]) {
+      await expect(
+        skills.getByText(name, { exact: true }).first(),
+      ).toBeAttached();
+    }
+  });
+
+  test("projets : les plus valorisants en tête, chacun avec son image", async ({
+    page,
+  }) => {
+    await page.goto("/projects");
+    await expect(page.locator("article h3").first()).toHaveText(
+      "Yahya-Express",
+    );
+    const images = page.locator("article img");
+    await expect(images.first()).toBeVisible();
+    const broken = await images.evaluateAll(
+      (imgs) =>
+        imgs.filter(
+          (img) =>
+            (img as HTMLImageElement).complete &&
+            (img as HTMLImageElement).naturalWidth === 0,
+        ).length,
+    );
+    expect(broken).toBe(0);
+  });
+
   test("page 404 soignée", async ({ page }) => {
     const res = await page.goto("/projects/999999");
     expect(res?.status()).toBe(404);

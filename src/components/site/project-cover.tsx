@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { isOptimizableImageUrl } from "@/lib/media-format";
 
 /**
  * Image de projet avec repli élégant (initiales sur fond neutre) si l'image
@@ -52,6 +53,7 @@ export function ProjectCover({
       fill
       sizes={sizes}
       priority={priority}
+      unoptimized={!isOptimizableImageUrl(src)}
       onError={() => setFailed(true)}
       className={cn("object-cover", className)}
     />
@@ -89,6 +91,7 @@ export function CoverFrame({
       fill
       sizes={sizes}
       priority={priority}
+      unoptimized={!isOptimizableImageUrl(src)}
       onError={() => setFailed(true)}
       className={cn("object-cover", imageClassName)}
     />

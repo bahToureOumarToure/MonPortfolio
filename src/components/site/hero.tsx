@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Download } from "lucide-react";
 import type { HeroVM, SocialVM } from "@/lib/content-types";
+import { isOptimizableImageUrl } from "@/lib/media-format";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { CodeCard } from "./code-card";
@@ -91,6 +92,7 @@ export default function Hero({
                 alt=""
                 fill
                 priority
+                unoptimized={!isOptimizableImageUrl(hero.heroImage)}
                 sizes="(min-width: 1024px) 40vw, 100vw"
                 className="object-cover"
               />

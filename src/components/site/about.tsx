@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Briefcase, Mail, MapPin } from "lucide-react";
 import type { ProfileVM, SettingsVM } from "@/lib/content-types";
+import { isOptimizableImageUrl } from "@/lib/media-format";
 import { Reveal } from "./reveal";
 import { Section, SectionHeader } from "./section";
 
@@ -45,6 +46,7 @@ export default function About({
               src={profile.image}
               alt={`Portrait de ${profile.name.replace(/[<>/]/g, "").trim()}`}
               fill
+              unoptimized={!isOptimizableImageUrl(profile.image)}
               sizes="(min-width: 1024px) 400px, 90vw"
               className="object-cover"
             />

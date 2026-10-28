@@ -6,7 +6,7 @@ const optionalImage = z
   .trim()
   .refine(
     (v) => v === "" || isAllowedImageUrl(v),
-    "Image : choisis un fichier de la médiathèque.",
+    "Image : lien invalide (https://… ou fichier de la médiathèque).",
   )
   .default("");
 

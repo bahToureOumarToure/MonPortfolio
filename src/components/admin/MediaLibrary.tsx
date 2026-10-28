@@ -6,6 +6,7 @@ import {
   FileText,
   FolderGit2,
   ImageIcon,
+  Link2,
   LoaderCircle,
   Pencil,
   Search,
@@ -28,6 +29,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Dialog from "./Dialog";
 import Thumb from "./Thumb";
+import ImageLinkDialog from "./ImageLinkDialog";
+import StorageStatus from "./StorageStatus";
 import { DropZone, UploadQueue } from "./DropZone";
 import { EmptyState, Field } from "./ui";
 import { useAction } from "./use-action";
@@ -49,6 +52,7 @@ export default function MediaLibrary({
   const [assignFor, setAssignFor] = useState<MediaDTO | null>(null);
   const [altFor, setAltFor] = useState<MediaDTO | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [linkOpen, setLinkOpen] = useState(false);
   const uploader = useUploader("IMAGE");
   const toast = useToast();
   const { pending, execute } = useAction();
@@ -114,12 +118,23 @@ export default function MediaLibrary({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
-        <DropZone
-          kind="IMAGE"
-          multiple
-          onFiles={onFiles}
-          label="Dépose tes images ici"
-        />
+        <StorageStatus />
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+          <DropZone
+            kind="IMAGE"
+            multiple
+            onFiles={onFiles}
+            label="Dépose tes images ici"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            className="h-auto py-3"
+            onClick={() => setLinkOpen(true)}
+          >
+            <Link2 /> Ajouter par lien
+          </Button>
+        </div>
         <UploadQueue items={uploader.items} onClear={uploader.clearErrors} />
       </div>
 
@@ -273,6 +288,11 @@ export default function MediaLibrary({
         </ul>
       )}
 
+      <ImageLinkDialog
+        open={linkOpen}
+        onClose={() => setLinkOpen(false)}
+        onAdded={(media) => setItems((prev) => [media, ...prev])}
+      />
       <AssignDialog
         media={assignFor}
         targets={targets}

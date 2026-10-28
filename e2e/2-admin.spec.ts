@@ -89,6 +89,26 @@ test.describe("Admin", () => {
     await expect(page.getByText(/format non accepté/)).toBeVisible();
   });
 
+  test("médias : diagnostic du stockage et ajout par lien validé", async ({
+    page,
+  }) => {
+    test.skip(!!process.env.BLOB_READ_WRITE_TOKEN, "stockage réel configuré");
+    await login(page);
+    await page.goto("/admin/media");
+    await expect(
+      page.getByText(
+        /Aucun stockage de fichiers n'est relié au site : les uploads/,
+      ),
+    ).toBeVisible();
+    await page.getByRole("button", { name: /Ajouter par lien/ }).click();
+    await page.locator("#img-url").fill("http://exemple.com/image.png");
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Ajouter" })
+      .click();
+    await expect(page.getByText(/Lien invalide/)).toBeVisible();
+  });
+
   test("médias : message clair si le stockage refuse l'envoi", async ({
     page,
   }) => {
@@ -105,6 +125,10 @@ test.describe("Admin", () => {
       mimeType: "image/png",
       buffer: png,
     });
-    await expect(page.getByText(/stockage non configuré/)).toBeVisible();
+    await expect(
+      page.getByText(
+        /Aucun stockage de fichiers n'est relié au site\. Dans Vercel/,
+      ),
+    ).toBeVisible();
   });
 });
