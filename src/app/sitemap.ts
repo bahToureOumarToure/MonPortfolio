@@ -1,28 +1,36 @@
 import type { MetadataRoute } from "next";
 import { getProjects } from "@/lib/queries";
 import { SITE_URL } from "@/lib/site";
+import { localizedPath, locales } from "@/i18n/routing";
 
+/** Chaque page dans chaque langue, avec ses équivalents (hreflang). */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const projects = await getProjects();
   const now = new Date();
-  return [
-    {
-      url: SITE_URL,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 1,
-    },
-    {
-      url: `${SITE_URL}/projects`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
+  const pages: {
+    path: string;
+    priority: number;
+    changeFrequency: "weekly" | "monthly";
+  }[] = [
+    { path: "/", priority: 1, changeFrequency: "weekly" },
+    { path: "/projects", priority: 0.8, changeFrequency: "weekly" },
     ...projects.map((p) => ({
-      url: `${SITE_URL}/projects/${p.id}`,
-      lastModified: now,
-      changeFrequency: "monthly" as const,
+      path: `/projects/${p.id}`,
       priority: 0.6,
+      changeFrequency: "monthly" as const,
     })),
   ];
+  const url = (path: string) => `${SITE_URL}${path === "/" ? "" : path}`;
+  return pages.flatMap(({ path, priority, changeFrequency }) => {
+    const languages = Object.fromEntries(
+      locales.map((l) => [l, url(localizedPath(l, path))]),
+    );
+    return locales.map((l) => ({
+      url: url(localizedPath(l, path)),
+      lastModified: now,
+      changeFrequency,
+      priority,
+      alternates: { languages },
+    }));
+  });
 }

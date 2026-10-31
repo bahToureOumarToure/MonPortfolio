@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Mail, MapPin, Phone } from "lucide-react";
 import type { SettingsVM, SocialVM } from "@/lib/content-types";
 import ContactForm from "./contact-form";
@@ -12,22 +13,23 @@ export default function Contact({
   settings: SettingsVM;
   socials: SocialVM[];
 }) {
+  const t = useTranslations("Contact");
   const items = [
     settings.contactEmail && {
       icon: Mail,
-      label: "Email",
+      label: t("email"),
       value: settings.contactEmail,
       href: `mailto:${settings.contactEmail}`,
     },
     settings.phone && {
       icon: Phone,
-      label: "Téléphone",
+      label: t("phone"),
       value: settings.phone,
       href: `tel:${settings.phone.replace(/\s+/g, "")}`,
     },
     settings.address && {
       icon: MapPin,
-      label: "Localisation",
+      label: t("location"),
       value: settings.address,
     },
   ].filter(Boolean) as {
@@ -40,9 +42,9 @@ export default function Contact({
   return (
     <Section id="contact" muted>
       <SectionHeader
-        eyebrow="Contact"
-        title="Travaillons ensemble"
-        description="Une opportunité de stage, un projet ou simplement une question ? Écris-moi, je réponds sous 24 h."
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
       />
       <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-12">
         <Reveal className="flex flex-col gap-3">
@@ -56,7 +58,10 @@ export default function Contact({
                   <span className="block text-xs text-muted-foreground">
                     {label}
                   </span>
-                  <span className="block truncate text-sm font-medium text-foreground">
+                  <span
+                    dir="auto"
+                    className="block truncate text-sm font-medium text-foreground"
+                  >
                     {value}
                   </span>
                 </span>
@@ -81,7 +86,7 @@ export default function Contact({
           {socials.length > 0 && (
             <div className="mt-4">
               <p className="mb-3 text-sm font-medium text-foreground">
-                Réseaux
+                {t("socials")}
               </p>
               <SocialLinks socials={socials} />
             </div>

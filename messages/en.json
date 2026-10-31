@@ -1,0 +1,136 @@
+{
+  "Meta": {
+    "title": "Bah Oumar Touré | Junior Developer - AI, Data, DevOps & Full-Stack",
+    "description": "Portfolio of Bah Oumar Touré, software engineering student at ENIAD Berkane. Focused on AI (Deep Learning, Machine Learning, agentic AI), Data & BI (Power BI), DevOps and Full-Stack development (Spring Boot, Next.js, React, Flutter). Open to internships.",
+    "ogDescription": "Software engineering student at ENIAD Berkane - Full-Stack, DevOps, AI & Data. Open to internships.",
+    "twitterTitle": "Bah Oumar Touré | Junior Developer - Full-Stack, AI",
+    "ogImageAlt": "Portfolio of Bah Oumar Touré - Junior Developer in AI, Data, DevOps & Full-Stack",
+    "jobTitle": "Software Engineering Student - Junior Full-Stack, Data, DevOps & AI Developer",
+    "personDescription": "Third-year state engineering student in Computer Engineering at ENIAD Berkane: Full-Stack development, DevOps, Spring Boot microservice architectures, Artificial Intelligence and Data. Looking for an internship.",
+    "projectsTitle": "Projects",
+    "projectsDescription": "All projects by Bah Oumar Touré: full-stack, mobile, data and artificial intelligence applications.",
+    "projectNotFound": "Project not found"
+  },
+  "Common": {
+    "skipToContent": "Skip to content",
+    "scrollTop": "Back to top",
+    "language": "Language"
+  },
+  "Nav": {
+    "about": "About",
+    "experience": "Journey",
+    "skills": "Skills",
+    "projects": "Projects",
+    "contact": "Contact",
+    "contactMe": "Contact me",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "main": "Main navigation",
+    "mobile": "Mobile navigation",
+    "home": "{name} — home"
+  },
+  "Hero": {
+    "prefix": "Software"
+  },
+  "About": {
+    "eyebrow": "About",
+    "location": "Location",
+    "status": "Status",
+    "statusValue": "Open to opportunities",
+    "email": "Email",
+    "portraitAlt": "Portrait of {name}"
+  },
+  "Journey": {
+    "eyebrow": "Journey",
+    "title": "Experience & education",
+    "description": "What I am looking for today and the path that led me here.",
+    "experience": "Experience",
+    "education": "Education"
+  },
+  "Skills": {
+    "eyebrow": "Skills",
+    "title": "My tech stack",
+    "description": "Languages, frameworks, DevOps & AI tools — and the human qualities that come with them.",
+    "categories": {
+      "FRONTEND": "Frontend",
+      "BACKEND": "Backend",
+      "LANGAGES": "Languages",
+      "DATABASE": "Databases",
+      "DEVOPS": "DevOps",
+      "DATA_IA": "Data & AI",
+      "MOBILE": "Mobile",
+      "TOOLS": "Tools",
+      "SOFT_SKILLS": "Soft skills"
+    }
+  },
+  "Projects": {
+    "eyebrow": "Projects",
+    "title": "Selected projects",
+    "description": "A selection of my work: full-stack, mobile, data and AI applications.",
+    "viewAll": "All projects",
+    "pageTitle": "Everything I have built",
+    "pageDescription": "Full-stack, mobile, data and AI applications — designed, developed and deployed end to end.",
+    "filterLabel": "Filter by technology",
+    "all": "All",
+    "count": "{count, plural, one {# project} other {# projects}}",
+    "countWith": "{count, plural, one {# project} other {# projects}} with {tool}",
+    "new": "New",
+    "demo": "Demo",
+    "code": "Code"
+  },
+  "Project": {
+    "back": "All projects",
+    "viewDemo": "View demo",
+    "sourceCode": "Source code",
+    "highlights": "Highlights",
+    "challenges": "Challenges tackled",
+    "gallery": "Gallery",
+    "screenshotAlt": "{name} — screenshot {index}",
+    "technologies": "Technologies",
+    "role": "Role",
+    "date": "Date",
+    "discuss": "Discuss this project",
+    "others": "Other projects",
+    "seeAll": "See all"
+  },
+  "Contact": {
+    "eyebrow": "Contact",
+    "title": "Let's work together",
+    "description": "An internship opportunity, a project or just a question? Write to me — I reply within 24 hours.",
+    "email": "Email",
+    "phone": "Phone",
+    "location": "Location",
+    "socials": "Social networks",
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Jane Doe",
+      "email": "Email",
+      "emailPlaceholder": "jane@example.com",
+      "message": "Message",
+      "messagePlaceholder": "Tell me about your project, an internship opportunity…",
+      "errName": "Please enter your name.",
+      "errEmail": "Please enter your email.",
+      "errEmailInvalid": "This email does not look valid.",
+      "errMessage": "Your message must be at least 10 characters long.",
+      "notConfigured": "The form is not set up yet. Write to me directly at {email}.",
+      "failed": "Sending failed. Try again or write to me at {email}.",
+      "sent": "Message sent, thank you! I will get back to you soon.",
+      "sending": "Sending…",
+      "send": "Send"
+    }
+  },
+  "Footer": {
+    "label": "Footer",
+    "navigation": "Navigation",
+    "allProjects": "All projects",
+    "contact": "Contact",
+    "rights": "© {year} {name}. All rights reserved."
+  },
+  "NotFound": {
+    "code": "Error 404",
+    "title": "Page not found",
+    "text": "The page you are looking for does not exist or has been moved.",
+    "home": "Back to home",
+    "projects": "See projects"
+  }
+}

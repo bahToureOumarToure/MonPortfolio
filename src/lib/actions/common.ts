@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import { Prisma, type User } from "@prisma/client";
 import { getSessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { sanitizeTranslations } from "@/lib/translate";
 import type { ActionResult } from "./result";
 
 // Module serveur pur (pas "use server") : ces helpers ne sont jamais exposés
@@ -33,13 +34,16 @@ export async function audit(
   }
 }
 
-/** Invalide le cache + régénère les pages publiques concernées. */
+/**
+ * Invalide le cache + régénère les pages publiques, dans toutes les langues
+ * (les pages vivent sous /[locale] : /, /fr, /es, /ar…).
+ */
 export async function revalidateContent(
   tags: string[],
   paths: string[] = [],
 ): Promise<void> {
   for (const t of tags) revalidateTag(t);
-  for (const p of paths) revalidatePath(p);
+  if (paths.length) revalidatePath("/[locale]", "layout");
 }
 
 function toMessage(error: unknown): string {
@@ -62,6 +66,20 @@ function toMessage(error: unknown): string {
   }
   console.error("[admin action]", error);
   return "Une erreur inattendue est survenue.";
+}
+
+/**
+ * Traductions saisies (fr / es / ar) → données Prisma. Absentes de la
+ * requête : la colonne n'est pas modifiée ; toutes vides : remise à zéro.
+ */
+export function translationsData(input: unknown, fields: readonly string[]) {
+  if (input === undefined) return {};
+  const clean = sanitizeTranslations(input, fields);
+  return {
+    translations: clean
+      ? (clean as Prisma.InputJsonValue)
+      : (Prisma.DbNull as typeof Prisma.DbNull),
+  };
 }
 
 /** Exécute une action admin et convertit toute erreur en message lisible. */

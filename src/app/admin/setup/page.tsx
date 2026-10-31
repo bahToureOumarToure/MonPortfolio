@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { LoaderCircle } from "lucide-react";
 import AuthCard from "@/components/admin/AuthCard";
 import { Button } from "@/components/ui/button";
@@ -81,12 +82,12 @@ export default function SetupPage() {
       {already && (
         <p className="text-sm">
           L&apos;administrateur est déjà configuré.{" "}
-          <a
+          <Link
             href="/admin/login"
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
             Se connecter
-          </a>
+          </Link>
         </p>
       )}
 

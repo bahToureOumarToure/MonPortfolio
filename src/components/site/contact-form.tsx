@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import emailjs from "@emailjs/browser";
 import { CheckCircle2, LoaderCircle, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ export default function ContactForm({
 }: {
   fallbackEmail: string;
 }) {
+  const t = useTranslations("Contact.form");
   const [values, setValues] = useState(EMPTY);
   const [touched, setTouched] = useState<Record<keyof typeof EMPTY, boolean>>({
     name: false,
@@ -28,16 +30,13 @@ export default function ContactForm({
   const [status, setStatus] = useState<Status>({ kind: "idle" });
 
   const errors = {
-    name: values.name.trim() ? "" : "Indique ton nom.",
+    name: values.name.trim() ? "" : t("errName"),
     email: !values.email.trim()
-      ? "Indique ton email."
+      ? t("errEmail")
       : isValidEmail(values.email)
         ? ""
-        : "Cet email ne semble pas valide.",
-    message:
-      values.message.trim().length >= 10
-        ? ""
-        : "Ton message doit faire au moins 10 caractères.",
+        : t("errEmailInvalid"),
+    message: values.message.trim().length >= 10 ? "" : t("errMessage"),
   };
   const hasErrors = Object.values(errors).some(Boolean);
 
@@ -58,7 +57,7 @@ export default function ContactForm({
     if (!serviceId || !templateId || !publicKey) {
       setStatus({
         kind: "error",
-        message: `Le formulaire n'est pas encore configuré. Écris-moi directement à ${fallbackEmail}.`,
+        message: t("notConfigured", { email: fallbackEmail }),
       });
       return;
     }
@@ -81,7 +80,7 @@ export default function ContactForm({
     } catch {
       setStatus({
         kind: "error",
-        message: `L'envoi a échoué. Réessaie ou écris-moi à ${fallbackEmail}.`,
+        message: t("failed", { email: fallbackEmail }),
       });
     }
   }
@@ -96,13 +95,13 @@ export default function ContactForm({
       className="flex flex-col gap-5 rounded-xl border bg-card p-6 shadow-sm sm:p-8"
     >
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field id="contact-name" label="Nom" error={fieldError("name")}>
+        <Field id="contact-name" label={t("name")} error={fieldError("name")}>
           <Input
             id="contact-name"
             name="name"
             autoComplete="name"
             maxLength={100}
-            placeholder="Jean Dupont"
+            placeholder={t("namePlaceholder")}
             value={values.name}
             onChange={(e) => set("name", e.target.value)}
             onBlur={() => setTouched((t) => ({ ...t, name: true }))}
@@ -112,14 +111,18 @@ export default function ContactForm({
             }
           />
         </Field>
-        <Field id="contact-email" label="Email" error={fieldError("email")}>
+        <Field
+          id="contact-email"
+          label={t("email")}
+          error={fieldError("email")}
+        >
           <Input
             id="contact-email"
             name="email"
             type="email"
             autoComplete="email"
             maxLength={120}
-            placeholder="jean@exemple.com"
+            placeholder={t("emailPlaceholder")}
             value={values.email}
             onChange={(e) => set("email", e.target.value)}
             onBlur={() => setTouched((t) => ({ ...t, email: true }))}
@@ -130,13 +133,17 @@ export default function ContactForm({
           />
         </Field>
       </div>
-      <Field id="contact-message" label="Message" error={fieldError("message")}>
+      <Field
+        id="contact-message"
+        label={t("message")}
+        error={fieldError("message")}
+      >
         <Textarea
           id="contact-message"
           name="message"
           rows={5}
           maxLength={1000}
-          placeholder="Parle-moi de ton projet, d'une opportunité de stage…"
+          placeholder={t("messagePlaceholder")}
           value={values.message}
           onChange={(e) => set("message", e.target.value)}
           onBlur={() => setTouched((t) => ({ ...t, message: true }))}
@@ -151,8 +158,7 @@ export default function ContactForm({
         <div aria-live="polite" className="text-sm">
           {status.kind === "sent" && (
             <p className="flex items-center gap-2 text-success">
-              <CheckCircle2 className="h-4 w-4" /> Message envoyé, merci ! Je
-              reviens vers toi rapidement.
+              <CheckCircle2 className="h-4 w-4" /> {t("sent")}
             </p>
           )}
           {status.kind === "error" && (
@@ -170,7 +176,7 @@ export default function ContactForm({
           ) : (
             <Send />
           )}
-          {status.kind === "sending" ? "Envoi…" : "Envoyer"}
+          {status.kind === "sending" ? t("sending") : t("send")}
         </Button>
       </div>
     </form>

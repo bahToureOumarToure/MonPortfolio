@@ -14,6 +14,7 @@ export default async function EducationAdminPage() {
     duration: r.duration,
     details: [],
     active: r.active,
+    translations: r.translations,
   }));
 
   return (

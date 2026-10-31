@@ -8,6 +8,11 @@ import { Input, Textarea } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import MediaPicker from "./MediaPicker";
 import { Checkbox, Field, Panel } from "./ui";
+import TranslationsEditor, {
+  translationsFromJson,
+  translationsToPayload,
+  type TranslationField,
+} from "./TranslationsEditor";
 import { useAction, useUnsavedWarning } from "./use-action";
 
 export interface ProjectFormValues {
@@ -24,6 +29,7 @@ export interface ProjectFormValues {
   featured: boolean;
   active: boolean;
   images: string[]; // URLs (la 1re = image principale)
+  translations?: unknown;
 }
 
 const EMPTY: ProjectFormValues = {
@@ -53,6 +59,14 @@ const csv = (s: string) =>
     .map((l) => l.trim())
     .filter(Boolean);
 
+const PROJECT_FIELDS: TranslationField[] = [
+  { key: "name", label: "Nom du projet" },
+  { key: "description", label: "Description", kind: "textarea" },
+  { key: "role", label: "Rôle" },
+  { key: "highlights", label: "Points forts", kind: "lines" },
+  { key: "challenges", label: "Défis relevés", kind: "lines" },
+];
+
 export default function ProjectForm({
   projectId,
   initial,
@@ -64,6 +78,9 @@ export default function ProjectForm({
   const start = initial ?? EMPTY;
   const [v, setV] = useState<ProjectFormValues>(start);
   const [dirty, setDirty] = useState(false);
+  const [tr, setTr] = useState(() =>
+    translationsFromJson(start.translations, PROJECT_FIELDS),
+  );
   const { pending, execute } = useAction();
   useUnsavedWarning(dirty && !pending);
 
@@ -84,6 +101,7 @@ export default function ProjectForm({
       challenges: lines(v.challenges),
       codeUrl: v.codeUrl.trim(),
       demoUrl: v.demoUrl.trim(),
+      translations: translationsToPayload(tr, PROJECT_FIELDS),
     };
     const res = await execute(
       () =>
@@ -226,6 +244,22 @@ export default function ProjectForm({
             />
           </Field>
         </div>
+      </Panel>
+
+      <Panel
+        title="Traductions"
+        description="Versions française, espagnole et arabe du projet."
+      >
+        <TranslationsEditor
+          idPrefix="project"
+          fields={PROJECT_FIELDS}
+          base={{ ...v }}
+          value={tr}
+          onChange={(next) => {
+            setTr(next);
+            setDirty(true);
+          }}
+        />
       </Panel>
 
       <Panel title="Publication">

@@ -1,0 +1,136 @@
+{
+  "Meta": {
+    "title": "Bah Oumar Touré | Développeur junior - IA, Data, DevOps & Full-Stack",
+    "description": "Portfolio de Bah Oumar Touré, élève ingénieur en Génie informatique à l'ENIAD Berkane. Spécialisé en IA (Deep Learning, Machine Learning, IA agentique), Data & BI (Power BI), DevOps et développement Full-Stack (Spring Boot, Next.js, React, Flutter). Disponible pour un stage.",
+    "ogDescription": "Élève ingénieur à l'ENIAD Berkane - Full-Stack, DevOps, IA & Data. Disponible pour un stage.",
+    "twitterTitle": "Bah Oumar Touré | Développeur junior - Full-Stack, IA",
+    "ogImageAlt": "Portfolio de Bah Oumar Touré - Développeur junior IA, Data, DevOps & Full-Stack",
+    "jobTitle": "Élève ingénieur en Génie informatique - Développeur junior Full-Stack, Data, DevOps & IA",
+    "personDescription": "Élève ingénieur d'État en 3e année de Génie informatique à l'ENIAD Berkane : développement Full-Stack, DevOps, architectures microservices Spring Boot, Intelligence Artificielle et Data. À la recherche d'un stage.",
+    "projectsTitle": "Projets",
+    "projectsDescription": "Tous les projets de Bah Oumar Touré : applications full-stack, mobile, data et intelligence artificielle.",
+    "projectNotFound": "Projet introuvable"
+  },
+  "Common": {
+    "skipToContent": "Aller au contenu",
+    "scrollTop": "Revenir en haut de la page",
+    "language": "Langue"
+  },
+  "Nav": {
+    "about": "À propos",
+    "experience": "Parcours",
+    "skills": "Compétences",
+    "projects": "Projets",
+    "contact": "Contact",
+    "contactMe": "Me contacter",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "main": "Navigation principale",
+    "mobile": "Navigation mobile",
+    "home": "{name} — accueil"
+  },
+  "Hero": {
+    "prefix": ""
+  },
+  "About": {
+    "eyebrow": "À propos",
+    "location": "Localisation",
+    "status": "Statut",
+    "statusValue": "Ouvert aux opportunités",
+    "email": "Email",
+    "portraitAlt": "Portrait de {name}"
+  },
+  "Journey": {
+    "eyebrow": "Parcours",
+    "title": "Expérience & formation",
+    "description": "Ce que je recherche aujourd'hui et le chemin parcouru jusqu'ici.",
+    "experience": "Expérience",
+    "education": "Formation"
+  },
+  "Skills": {
+    "eyebrow": "Compétences",
+    "title": "Ma stack technique",
+    "description": "Langages, frameworks, outils DevOps & IA — et les qualités humaines qui vont avec.",
+    "categories": {
+      "FRONTEND": "Frontend",
+      "BACKEND": "Backend",
+      "LANGAGES": "Langages",
+      "DATABASE": "Bases de données",
+      "DEVOPS": "DevOps",
+      "DATA_IA": "Data & IA",
+      "MOBILE": "Mobile",
+      "TOOLS": "Outils",
+      "SOFT_SKILLS": "Soft skills"
+    }
+  },
+  "Projects": {
+    "eyebrow": "Projets",
+    "title": "Projets sélectionnés",
+    "description": "Une sélection de réalisations : applications full-stack, mobile, data et IA.",
+    "viewAll": "Tous les projets",
+    "pageTitle": "Toutes mes réalisations",
+    "pageDescription": "Applications full-stack, mobile, data et IA — conçues, développées et déployées de bout en bout.",
+    "filterLabel": "Filtrer par technologie",
+    "all": "Tous",
+    "count": "{count, plural, one {# projet} other {# projets}}",
+    "countWith": "{count, plural, one {# projet} other {# projets}} avec {tool}",
+    "new": "Nouveau",
+    "demo": "Démo",
+    "code": "Code"
+  },
+  "Project": {
+    "back": "Tous les projets",
+    "viewDemo": "Voir la démo",
+    "sourceCode": "Code source",
+    "highlights": "Points forts",
+    "challenges": "Défis relevés",
+    "gallery": "Galerie",
+    "screenshotAlt": "{name} — capture {index}",
+    "technologies": "Technologies",
+    "role": "Rôle",
+    "date": "Date",
+    "discuss": "Discuter de ce projet",
+    "others": "Autres projets",
+    "seeAll": "Tout voir"
+  },
+  "Contact": {
+    "eyebrow": "Contact",
+    "title": "Travaillons ensemble",
+    "description": "Une opportunité de stage, un projet ou simplement une question ? Écrivez-moi, je réponds sous 24 h.",
+    "email": "Email",
+    "phone": "Téléphone",
+    "location": "Localisation",
+    "socials": "Réseaux",
+    "form": {
+      "name": "Nom",
+      "namePlaceholder": "Jean Dupont",
+      "email": "Email",
+      "emailPlaceholder": "jean@exemple.com",
+      "message": "Message",
+      "messagePlaceholder": "Parlez-moi de votre projet, d'une opportunité de stage…",
+      "errName": "Indiquez votre nom.",
+      "errEmail": "Indiquez votre email.",
+      "errEmailInvalid": "Cet email ne semble pas valide.",
+      "errMessage": "Votre message doit faire au moins 10 caractères.",
+      "notConfigured": "Le formulaire n'est pas encore configuré. Écrivez-moi directement à {email}.",
+      "failed": "L'envoi a échoué. Réessayez ou écrivez-moi à {email}.",
+      "sent": "Message envoyé, merci ! Je reviens vers vous rapidement.",
+      "sending": "Envoi…",
+      "send": "Envoyer"
+    }
+  },
+  "Footer": {
+    "label": "Pied de page",
+    "navigation": "Navigation",
+    "allProjects": "Tous les projets",
+    "contact": "Contact",
+    "rights": "© {year} {name}. Tous droits réservés."
+  },
+  "NotFound": {
+    "code": "Erreur 404",
+    "title": "Page introuvable",
+    "text": "La page que vous cherchez n'existe pas ou a été déplacée.",
+    "home": "Retour à l'accueil",
+    "projects": "Voir les projets"
+  }
+}

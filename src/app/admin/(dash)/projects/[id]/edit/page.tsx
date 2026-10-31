@@ -34,6 +34,7 @@ export default async function EditProjectPage({
     featured: project.featured,
     active: project.active,
     images: project.images.map((i) => i.media.url),
+    translations: project.translations,
   };
 
   return (

@@ -58,6 +58,8 @@ model Hero {
   ctaResumeLabel  String   @default("Get Resume")
   heroImageId     String?
   heroImage       Media?   @relation("HeroImage", fields: [heroImageId], references: [id])
+  // Traductions { fr: {…}, es: {…}, ar: {…} } ; les colonnes = anglais (défaut)
+  translations    Json?
   updatedAt       DateTime @updatedAt
 }
 
@@ -68,6 +70,8 @@ model Profile {
   description    String
   imageId        String?
   image          Media?   @relation("ProfileImage", fields: [imageId], references: [id])
+  // Traductions { fr: {…}, es: {…}, ar: {…} } ; les colonnes = anglais (défaut)
+  translations   Json?
   updatedAt      DateTime @updatedAt
 }
 
@@ -85,6 +89,8 @@ model SiteSettings {
   publishedResume   Media?   @relation("PublishedResume", fields: [publishedResumeId], references: [id])
   // Lien de secours si aucun fichier CV n'est publié (ex. Google Drive)
   resumeExternalUrl String?
+  // Traductions { fr: {…}, es: {…}, ar: {…} } ; les colonnes = anglais (défaut)
+  translations      Json?
   updatedAt         DateTime @updatedAt
 }
 
@@ -104,15 +110,17 @@ enum SkillCategory {
 }
 
 model Skill {
-  id        String        @id @default(cuid())
-  name      String
-  category  SkillCategory
-  iconKey   String? // clé du registre utils/skill-icons.ts
-  color     String?
-  order     Int           @default(0)
-  active    Boolean       @default(true)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  name         String
+  category     SkillCategory
+  iconKey      String? // clé du registre utils/skill-icons.ts
+  color        String?
+  order        Int           @default(0)
+  active       Boolean       @default(true)
+  // Traductions { fr: {…}, es: {…}, ar: {…} } ; les colonnes = anglais (défaut)
+  translations Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   @@index([category, order])
 }
@@ -148,6 +156,8 @@ model Project {
   primaryImageId String?
   primaryImage   Media?         @relation("ProjectPrimaryImage", fields: [primaryImageId], references: [id])
   images         ProjectImage[]
+  // Traductions { fr: {…}, es: {…}, ar: {…} } ; les colonnes = anglais (défaut)
+  translations   Json?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -167,24 +177,28 @@ model ProjectImage {
 
 // "Stage" — cartes de la timeline (recherche de stage / parcours pro)
 model Experience {
-  id       String   @id @default(cuid())
-  title    String
-  company  String   @default("")
-  duration String   @default("")
-  details  String[] @default([])
-  order    Int      @default(0)
-  active   Boolean  @default(true)
+  id           String   @id @default(cuid())
+  title        String
+  company      String   @default("")
+  duration     String   @default("")
+  details      String[] @default([])
+  // Traductions { fr: {…}, es: {…}, ar: {…} } ; les colonnes = anglais (défaut)
+  translations Json?
+  order        Int      @default(0)
+  active       Boolean  @default(true)
 
   @@index([order])
 }
 
 model Education {
-  id          String  @id @default(cuid())
-  title       String
-  duration    String  @default("")
-  institution String  @default("")
-  order       Int     @default(0)
-  active      Boolean @default(true)
+  id           String  @id @default(cuid())
+  title        String
+  duration     String  @default("")
+  institution  String  @default("")
+  // Traductions { fr: {…}, es: {…}, ar: {…} } ; les colonnes = anglais (défaut)
+  translations Json?
+  order        Int     @default(0)
+  active       Boolean @default(true)
 
   @@index([order])
 }

@@ -6,12 +6,22 @@
  *
  * Ne touche PAS aux tables d'authentification (bootstrap admin séparé).
  */
-import { PrismaClient, SkillCategory, MediaKind } from "@prisma/client";
+import {
+  PrismaClient,
+  SkillCategory,
+  MediaKind,
+  type Prisma,
+} from "@prisma/client";
 import { personalData } from "../utils/Data/PersonalData";
 import { projectsData } from "../utils/Data/projects-data";
 import { skillsData } from "../utils/Data/skills";
 import { experiences } from "../utils/Data/experience";
 import { educations } from "../utils/Data/educations";
+import {
+  heroContent,
+  profileContent,
+  settingsContent,
+} from "../utils/Data/site-content";
 
 const prisma = new PrismaClient();
 
@@ -26,6 +36,9 @@ const CATEGORY_MAP: Record<string, SkillCategory> = {
   DevOps: "DEVOPS",
   "Soft skills": "SOFT_SKILLS",
 };
+
+/** Traductions (objets typés) → valeur JSON acceptée par Prisma. */
+const json = (value: object) => value as Prisma.InputJsonValue;
 
 function basename(p: string): string {
   return p.split("/").filter(Boolean).pop() ?? p;
@@ -61,17 +74,17 @@ async function main() {
   await prisma.hero.create({
     data: {
       id: "singleton",
-      tagline: "WELCOME TO MY UNIVERSE",
-      headingTop: "Crafting Digital",
-      headingBottom: "Masterpieces",
+      tagline: heroContent.tagline,
+      headingTop: heroContent.headingTop,
+      headingBottom: heroContent.headingBottom,
       name: personalData.name,
-      designation: personalData.designation,
-      alternateWords: personalData.designationAlternateWords,
-      subheading:
-        "dedicated to building high-performance, user-focused digital products",
-      ctaPrimaryLabel: "Let's Collaborate",
+      designation: heroContent.designation,
+      alternateWords: heroContent.alternateWords,
+      subheading: heroContent.subheading,
+      ctaPrimaryLabel: heroContent.ctaPrimaryLabel,
       ctaPrimaryHref: "/#contact",
-      ctaResumeLabel: "Get Resume",
+      ctaResumeLabel: heroContent.ctaResumeLabel,
+      translations: json(heroContent.translations),
     },
   });
 
@@ -79,10 +92,11 @@ async function main() {
   await prisma.profile.create({
     data: {
       id: "singleton",
-      aboutTitle: "About",
-      aboutHighlight: "The Software Engineer",
-      description: personalData.description,
+      aboutTitle: profileContent.aboutTitle,
+      aboutHighlight: profileContent.aboutHighlight,
+      description: profileContent.description,
       imageId: profileMedia.id,
+      translations: json(profileContent.translations),
     },
   });
 
@@ -90,14 +104,13 @@ async function main() {
   await prisma.siteSettings.create({
     data: {
       id: "singleton",
-      siteTitle: "Bah Oumar Touré Portfolio",
-      metaDescription:
-        "Portfolio de Bah Oumar Touré — Étudiant ingénieur ENIAD Berkane. IA, Data, DevOps & Full-Stack.",
+      siteTitle: settingsContent.siteTitle,
+      metaDescription: settingsContent.metaDescription,
       contactEmail: personalData.email,
       phone: personalData.phone,
-      address: personalData.address,
-      footerTagline:
-        "A curated showcase of high-performance full-stack applications, AI experiments, and intuitive digital experiences built with purpose.",
+      address: settingsContent.address,
+      footerTagline: settingsContent.footerTagline,
+      translations: json(settingsContent.translations),
       resumeExternalUrl: personalData.resume,
       sections: {
         hero: { visible: true, order: 0 },
@@ -173,6 +186,13 @@ async function main() {
       iconKey: s.name,
       order: i,
       active: true,
+      translations: s.translations
+        ? json(
+            Object.fromEntries(
+              Object.entries(s.translations).map(([l, name]) => [l, { name }]),
+            ),
+          )
+        : undefined,
     })),
   });
 
@@ -185,6 +205,7 @@ async function main() {
       details: e.details,
       order: i,
       active: true,
+      translations: json(e.translations),
     })),
   });
 
@@ -196,6 +217,7 @@ async function main() {
       institution: e.institution,
       order: i,
       active: true,
+      translations: json(e.translations),
     })),
   });
 
@@ -219,6 +241,7 @@ async function main() {
         featured: i < 3,
         active: true,
         order: i,
+        translations: json(p.translations),
       },
     });
 

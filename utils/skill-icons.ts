@@ -233,23 +233,30 @@ export const getSkillIcon = (skill: string): IconType => {
     case "scrum":
       return TbRefresh;
     case "écoute active":
+    case "active listening":
     case "ecoute active":
       return TbEar;
     case "empathique":
+    case "empathetic":
     case "empathie":
       return TbHeartHandshake;
     case "curieux":
+    case "curious":
     case "curiosité":
       return TbBulb;
     case "motivé":
+    case "motivated":
     case "motivation":
       return TbFlame;
     case "apprentissage continu":
+    case "continuous learning":
       return TbBook;
     case "esprit d'équipe":
+    case "team spirit":
     case "travail en équipe":
       return TbUsersGroup;
     case "autonome":
+    case "autonomous":
     case "autonomie":
       return TbCompass;
 

@@ -3,7 +3,14 @@ import { prisma } from "@/lib/db";
 import { projectInput } from "@/lib/validation/project";
 import { idList } from "@/lib/validation/collections";
 import { ensureImageMedia } from "@/lib/media-resolve";
-import { assertAdmin, audit, revalidateContent, run } from "./common";
+import { TRANSLATABLE } from "@/lib/translate";
+import {
+  assertAdmin,
+  audit,
+  revalidateContent,
+  run,
+  translationsData,
+} from "./common";
 import type { ActionResult } from "./result";
 
 async function revalidateProjects(
@@ -47,6 +54,7 @@ function projectData(data: ReturnType<typeof projectInput.parse>) {
     status: data.status || null,
     featured: data.featured,
     active: data.active,
+    ...translationsData(data.translations, TRANSLATABLE.project),
   };
 }
 

@@ -36,7 +36,7 @@ const Select = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <select
     ref={ref}
-    className={cn(fieldClass, "h-10 pr-8", className)}
+    className={cn(fieldClass, "h-10 pe-8", className)}
     {...props}
   />
 ));

@@ -1,8 +1,11 @@
 // utils/Data/skills.ts
 
 export interface Skill {
+  /** Nom de base (anglais, langue par défaut du site). */
   name: string;
   category: SkillCategory;
+  /** Nom traduit quand il diffère (les noms de technologies ne changent pas). */
+  translations?: Partial<Record<"fr" | "es" | "ar", string>>;
 }
 
 export type SkillCategory =
@@ -46,18 +49,50 @@ export const skillsData: Skill[] = [
 
   // --- Data & IA ---
   { name: "Power BI", category: "Data & IA" },
-  { name: "IA", category: "Data & IA" },
-  { name: "Machine Learning", category: "Data & IA" },
-  { name: "Deep Learning", category: "Data & IA" },
+  {
+    name: "AI",
+    category: "Data & IA",
+    translations: { fr: "IA", es: "IA", ar: "الذكاء الاصطناعي" },
+  },
+  {
+    name: "Machine Learning",
+    category: "Data & IA",
+    translations: { ar: "تعلم الآلة" },
+  },
+  {
+    name: "Deep Learning",
+    category: "Data & IA",
+    translations: { ar: "التعلم العميق" },
+  },
   { name: "LangChain", category: "Data & IA" },
   { name: "TensorFlow", category: "Data & IA" },
   { name: "Claude Code", category: "Data & IA" },
   { name: "Antigravity", category: "Data & IA" },
   { name: "RAG", category: "Data & IA" },
-  { name: "Agentic AI", category: "Data & IA" },
-  { name: "Multi-Agent AI", category: "Data & IA" },
+  {
+    name: "Agentic AI",
+    category: "Data & IA",
+    translations: {
+      fr: "IA agentique",
+      es: "IA agéntica",
+      ar: "الذكاء الاصطناعي الوكيلي",
+    },
+  },
+  {
+    name: "Multi-Agent AI",
+    category: "Data & IA",
+    translations: {
+      fr: "IA multi-agents",
+      es: "IA multiagente",
+      ar: "الأنظمة متعددة الوكلاء",
+    },
+  },
   { name: "LLM", category: "Data & IA" },
-  { name: "Prompt Engineering", category: "Data & IA" },
+  {
+    name: "Prompt Engineering",
+    category: "Data & IA",
+    translations: { es: "Ingeniería de prompts", ar: "هندسة الأوامر" },
+  },
 
   // --- Mobile ---
   { name: "Flutter", category: "Mobile" },
@@ -79,13 +114,53 @@ export const skillsData: Skill[] = [
 
   // --- Soft skills ---
   { name: "Agile / Scrum", category: "Soft skills" },
-  { name: "Écoute active", category: "Soft skills" },
-  { name: "Empathique", category: "Soft skills" },
-  { name: "Curieux", category: "Soft skills" },
-  { name: "Motivé", category: "Soft skills" },
-  { name: "Apprentissage continu", category: "Soft skills" },
-  { name: "Esprit d'équipe", category: "Soft skills" },
-  { name: "Autonome", category: "Soft skills" },
+  {
+    name: "Active listening",
+    category: "Soft skills",
+    translations: {
+      fr: "Écoute active",
+      es: "Escucha activa",
+      ar: "الإصغاء الفعّال",
+    },
+  },
+  {
+    name: "Empathetic",
+    category: "Soft skills",
+    translations: { fr: "Empathique", es: "Empático", ar: "متعاطف" },
+  },
+  {
+    name: "Curious",
+    category: "Soft skills",
+    translations: { fr: "Curieux", es: "Curioso", ar: "فضولي" },
+  },
+  {
+    name: "Motivated",
+    category: "Soft skills",
+    translations: { fr: "Motivé", es: "Motivado", ar: "متحفّز" },
+  },
+  {
+    name: "Continuous learning",
+    category: "Soft skills",
+    translations: {
+      fr: "Apprentissage continu",
+      es: "Aprendizaje continuo",
+      ar: "التعلم المستمر",
+    },
+  },
+  {
+    name: "Team spirit",
+    category: "Soft skills",
+    translations: {
+      fr: "Esprit d'équipe",
+      es: "Espíritu de equipo",
+      ar: "روح الفريق",
+    },
+  },
+  {
+    name: "Autonomous",
+    category: "Soft skills",
+    translations: { fr: "Autonome", es: "Autónomo", ar: "مستقل" },
+  },
 ];
 
 // Helper pour grouper par catégorie

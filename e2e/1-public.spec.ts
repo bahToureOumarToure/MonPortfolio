@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Site public", () => {
-  test("accueil : thème clair par défaut, sections et navigation", async ({
+  test("accueil : anglais et thème clair par défaut, sections et navigation", async ({
     page,
   }) => {
     const errors: string[] = [];
@@ -12,6 +12,7 @@ test.describe("Site public", () => {
     for (const id of ["about", "experience", "skills", "projects", "contact"]) {
       await expect(page.locator(`#${id}`)).toBeAttached();
     }
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page.locator("html")).not.toHaveClass(/\bdark\b/);
     const bg = await page.evaluate(
       () => getComputedStyle(document.body).backgroundColor,
@@ -19,8 +20,8 @@ test.describe("Site public", () => {
     expect(bg).toBe("rgb(255, 255, 255)");
 
     await page
-      .getByRole("navigation", { name: "Navigation principale" })
-      .getByRole("link", { name: "Projets" })
+      .getByRole("navigation", { name: "Main navigation" })
+      .getByRole("link", { name: "Projects" })
       .click();
     await expect(page).toHaveURL(/#projects$/);
     expect(errors).toEqual([]);
@@ -28,7 +29,7 @@ test.describe("Site public", () => {
 
   test("aucun débordement horizontal sur mobile", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const path of ["/", "/projects"]) {
+    for (const path of ["/", "/projects", "/ar", "/ar/projects"]) {
       await page.goto(path);
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth - window.innerWidth,
@@ -40,9 +41,9 @@ test.describe("Site public", () => {
   test("menu mobile : ouverture et fermeture", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
-    await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+    await page.getByRole("button", { name: "Open menu" }).click();
     const mobileNav = page.getByRole("navigation", {
-      name: "Navigation mobile",
+      name: "Mobile navigation",
     });
     await expect(mobileNav).toBeVisible();
     await page.keyboard.press("Escape");
@@ -52,9 +53,9 @@ test.describe("Site public", () => {
   test("projets : filtre par technologie et page détail", async ({ page }) => {
     await page.goto("/projects");
     const filters = page.getByRole("group", {
-      name: "Filtrer par technologie",
+      name: "Filter by technology",
     });
-    const counter = page.getByText(/^\d+ projets?/);
+    const counter = page.getByText(/^\d+ projects?/);
     const total = await counter.innerText();
     const firstFilter = filters.getByRole("button").nth(1);
     await firstFilter.click();
@@ -83,8 +84,8 @@ test.describe("Site public", () => {
       "RAG",
       "Agentic AI",
       "Multi-Agent AI",
-      "Écoute active",
-      "Apprentissage continu",
+      "Active listening",
+      "Continuous learning",
     ]) {
       await expect(
         skills.getByText(name, { exact: true }).first(),
@@ -116,15 +117,15 @@ test.describe("Site public", () => {
     const res = await page.goto("/projects/999999");
     expect(res?.status()).toBe(404);
     await expect(
-      page.getByRole("heading", { name: "Page introuvable" }),
+      page.getByRole("heading", { name: "Page not found" }),
     ).toBeVisible();
   });
 
   test("formulaire de contact : validation accessible", async ({ page }) => {
     await page.goto("/#contact");
-    await page.getByRole("button", { name: "Envoyer" }).click();
-    await expect(page.getByText("Indique ton nom.")).toBeVisible();
-    await expect(page.getByText("Indique ton email.")).toBeVisible();
+    await page.getByRole("button", { name: "Send" }).click();
+    await expect(page.getByText("Please enter your name.")).toBeVisible();
+    await expect(page.getByText("Please enter your email.")).toBeVisible();
     await expect(page.locator("#contact-name")).toHaveAttribute(
       "aria-invalid",
       "true",
@@ -136,5 +137,55 @@ test.describe("Site public", () => {
     expect(robots).toContain("Disallow: /admin");
     const sitemap = await (await request.get("/sitemap.xml")).text();
     expect(sitemap).toContain("/projects/");
+    expect(sitemap).toContain("/fr/projects");
+    expect(sitemap).toContain('hreflang="ar"');
+  });
+
+  test("langues : passage en français via le sélecteur", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: /^Language/ }).click();
+    await page.getByRole("link", { name: "Français" }).click();
+    await expect(page).toHaveURL(/\/fr$/);
+    await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+    await expect(
+      page.getByRole("navigation", { name: "Navigation principale" }),
+    ).toBeVisible();
+    await expect(
+      page.locator("#skills").getByText("Écoute active").first(),
+    ).toBeAttached();
+
+    // La langue suit la navigation et le contenu des projets est traduit.
+    await page.goto("/fr/projects");
+    await expect(page.locator("h1")).toHaveText("Toutes mes réalisations");
+    await expect(page.locator("article").first()).toContainText(
+      "Développement de l'API back-end",
+    );
+  });
+
+  test("langues : espagnol et arabe (droite à gauche)", async ({ page }) => {
+    await page.goto("/es");
+    await expect(page.locator("html")).toHaveAttribute("lang", "es");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      "Creando",
+    );
+
+    await page.goto("/ar/projects/9");
+    const html = page.locator("html");
+    await expect(html).toHaveAttribute("lang", "ar");
+    await expect(html).toHaveAttribute("dir", "rtl");
+    await expect(page.getByText("أبرز النقاط")).toBeVisible();
+
+    // Balises hreflang pour chaque langue + x-default.
+    for (const lang of ["en", "fr", "es", "ar", "x-default"]) {
+      await expect(
+        page.locator(`link[rel="alternate"][hreflang="${lang}"]`),
+      ).toHaveCount(1);
+    }
+  });
+
+  test("langues : /en redirige vers l'URL sans préfixe", async ({ page }) => {
+    await page.goto("/en/projects");
+    await expect(page).toHaveURL(/\/projects$/);
+    await expect(page).not.toHaveURL(/\/en\//);
   });
 });

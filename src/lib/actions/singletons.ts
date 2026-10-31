@@ -6,7 +6,14 @@ import {
   settingsInput,
 } from "@/lib/validation/singletons";
 import { ensureImageMedia } from "@/lib/media-resolve";
-import { assertAdmin, audit, revalidateContent, run } from "./common";
+import { TRANSLATABLE } from "@/lib/translate";
+import {
+  assertAdmin,
+  audit,
+  revalidateContent,
+  run,
+  translationsData,
+} from "./common";
 import type { ActionResult } from "./result";
 
 export async function updateHero(input: unknown): Promise<ActionResult> {
@@ -25,6 +32,7 @@ export async function updateHero(input: unknown): Promise<ActionResult> {
       ctaPrimaryHref: data.ctaPrimaryHref,
       ctaResumeLabel: data.ctaResumeLabel,
       heroImageId: await ensureImageMedia(data.heroImage),
+      ...translationsData(data.translations, TRANSLATABLE.hero),
     };
     await prisma.hero.upsert({
       where: { id: "singleton" },
@@ -46,6 +54,7 @@ export async function updateProfile(input: unknown): Promise<ActionResult> {
       aboutHighlight: data.aboutHighlight,
       description: data.description,
       imageId: await ensureImageMedia(data.image),
+      ...translationsData(data.translations, TRANSLATABLE.profile),
     };
     await prisma.profile.upsert({
       where: { id: "singleton" },
@@ -70,6 +79,7 @@ export async function updateSettings(input: unknown): Promise<ActionResult> {
       address: data.address,
       footerTagline: data.footerTagline,
       resumeExternalUrl: data.resumeExternalUrl || null,
+      ...translationsData(data.translations, TRANSLATABLE.settings),
     };
     await prisma.siteSettings.upsert({
       where: { id: "singleton" },

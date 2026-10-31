@@ -18,6 +18,7 @@ export default async function SettingsAdminPage() {
     address: s?.address ?? "",
     footerTagline: s?.footerTagline ?? "",
     resumeExternalUrl: s?.resumeExternalUrl ?? "",
+    translations: s?.translations ?? null,
   };
 
   const currentResume = s?.publishedResume

@@ -28,6 +28,13 @@ liste des projets filtrable par technologie, page détail par projet, 404, SEO
 (métadonnées, JSON-LD, `robots.txt`, `sitemap.xml`), responsive et accessible
 (navigation clavier, lecteurs d'écran, `prefers-reduced-motion`).
 
+**Langues** — anglais (par défaut, sur `/`), français (`/fr`), espagnol (`/es`) et
+arabe (`/ar`, de droite à gauche). Sélecteur de langue dans la barre de navigation,
+balises `hreflang`, sitemap multilingue. Les textes de l'interface sont dans
+`messages/*.json` ; le contenu (projets, parcours, compétences…) se traduit dans
+l'admin, onglets Français / Español / العربية sous chaque formulaire (un champ
+vide affiche le texte anglais).
+
 **Admin (`/admin`)** — tableau de bord, Profil & Hero, Projets (ordre, mise en avant,
 visibilité), Compétences, Expérience, Formation, Liens sociaux, Médias, Apparence,
 Paramètres & CV, Sécurité. Chaque modification est en ligne immédiatement.
@@ -54,7 +61,7 @@ scripts/
 e2e/                   # tests Playwright (site public + admin)
 src/
   app/
-    (site)/            # pages publiques (layout avec navbar/footer)
+    [locale]/          # pages publiques, une version par langue (en, fr, es, ar)
     admin/             # espace d'administration
     api/admin/         # auth, passkeys, upload
     globals.css        # tokens du design system
@@ -67,7 +74,9 @@ src/
     validation/        # schémas Zod (messages en français)
     queries.ts         # lectures publiques mises en cache (+ repli sans base)
     theme.ts           # thème : tokens, presets, contrastes
-utils/                 # contenu de repli et registres d'icônes
+  i18n/                # langues, liens localisés (next-intl)
+messages/              # textes de l'interface : en, fr, es, ar
+utils/                 # contenu de repli (avec traductions) et registres d'icônes
 ```
 
 ## Démarrer en local

@@ -14,6 +14,7 @@ export default async function ExperienceAdminPage() {
     duration: r.duration,
     details: r.details,
     active: r.active,
+    translations: r.translations,
   }));
 
   return (

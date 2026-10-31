@@ -6,9 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import MediaPicker from "./MediaPicker";
 import { Field } from "./ui";
+import TranslationsEditor, {
+  translationsFromJson,
+  translationsToPayload,
+  type TranslationField,
+} from "./TranslationsEditor";
 import { useAction, useUnsavedWarning } from "./use-action";
 
 export interface HeroFormValues {
+  translations?: unknown;
   tagline: string;
   headingTop: string;
   headingBottom: string;
@@ -22,8 +28,22 @@ export interface HeroFormValues {
   heroImage: string;
 }
 
+const HERO_FIELDS: TranslationField[] = [
+  { key: "tagline", label: "Badge" },
+  { key: "headingTop", label: "Titre — début" },
+  { key: "headingBottom", label: "Titre — fin (couleur d'accent)" },
+  { key: "designation", label: "Désignation" },
+  { key: "alternateWords", label: "Mots animés", kind: "csv" },
+  { key: "subheading", label: "Sous-titre", kind: "textarea" },
+  { key: "ctaPrimaryLabel", label: "Bouton principal" },
+  { key: "ctaResumeLabel", label: "Bouton CV" },
+];
+
 export default function HeroForm({ initial }: { initial: HeroFormValues }) {
   const [v, setV] = useState(initial);
+  const [tr, setTr] = useState(() =>
+    translationsFromJson(initial.translations, HERO_FIELDS),
+  );
   const [dirty, setDirty] = useState(false);
   const { pending, execute } = useAction();
   useUnsavedWarning(dirty && !pending);
@@ -43,6 +63,7 @@ export default function HeroForm({ initial }: { initial: HeroFormValues }) {
             .split(",")
             .map((s) => s.trim())
             .filter(Boolean),
+          translations: translationsToPayload(tr, HERO_FIELDS),
         }),
       { success: "Section d'accueil enregistrée." },
     );
@@ -105,7 +126,7 @@ export default function HeroForm({ initial }: { initial: HeroFormValues }) {
       <Field
         label="Mots animés"
         htmlFor="h-words"
-        hint="Séparés par des virgules ; ils défilent après « Software »."
+        hint="Séparés par des virgules ; ils défilent après le nom (précédés de « Software » en anglais)."
       >
         <Input
           id="h-words"
@@ -159,6 +180,16 @@ export default function HeroForm({ initial }: { initial: HeroFormValues }) {
           onChange={(url) => set("heroImage", url as string)}
         />
       </Field>
+      <TranslationsEditor
+        idPrefix="hero"
+        fields={HERO_FIELDS}
+        base={{ ...v }}
+        value={tr}
+        onChange={(next) => {
+          setTr(next);
+          setDirty(true);
+        }}
+      />
       <div className="flex items-center justify-end gap-3">
         {dirty && (
           <span className="mr-auto text-xs text-muted-foreground">

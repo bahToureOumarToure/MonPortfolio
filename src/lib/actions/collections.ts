@@ -7,7 +7,14 @@ import {
   educationInput,
   idList,
 } from "@/lib/validation/collections";
-import { assertAdmin, audit, revalidateContent, run } from "./common";
+import { TRANSLATABLE } from "@/lib/translate";
+import {
+  assertAdmin,
+  audit,
+  revalidateContent,
+  run,
+  translationsData,
+} from "./common";
 import type { ActionResult } from "./result";
 
 type OrderedModel = "skill" | "socialLink" | "experience" | "education";
@@ -53,6 +60,7 @@ export async function createSkill(input: unknown): Promise<ActionResult> {
         iconKey: d.iconKey || d.name,
         color: d.color || null,
         active: d.active,
+        ...translationsData(d.translations, TRANSLATABLE.skill),
         order: await nextOrder("skill"),
       },
     });
@@ -77,6 +85,7 @@ export async function updateSkill(
         iconKey: d.iconKey || d.name,
         color: d.color || null,
         active: d.active,
+        ...translationsData(d.translations, TRANSLATABLE.skill),
       },
     });
     await audit("skill.update", "Skill", id);
@@ -179,6 +188,7 @@ export async function createExperience(input: unknown): Promise<ActionResult> {
         duration: d.duration,
         details: d.details.filter(Boolean),
         active: d.active,
+        ...translationsData(d.translations, TRANSLATABLE.experience),
         order: await nextOrder("experience"),
       },
     });
@@ -203,6 +213,7 @@ export async function updateExperience(
         duration: d.duration,
         details: d.details.filter(Boolean),
         active: d.active,
+        ...translationsData(d.translations, TRANSLATABLE.experience),
       },
     });
     await audit("experience.update", "Experience", id);
@@ -235,8 +246,13 @@ export async function createEducation(input: unknown): Promise<ActionResult> {
   return run(async () => {
     await assertAdmin();
     const d = educationInput.parse(input);
+    const { translations, ...fields } = d;
     const e = await prisma.education.create({
-      data: { ...d, order: await nextOrder("education") },
+      data: {
+        ...fields,
+        ...translationsData(translations, TRANSLATABLE.education),
+        order: await nextOrder("education"),
+      },
     });
     await audit("education.create", "Education", e.id);
     await revalidateContent(["educations"], ["/"]);
@@ -251,7 +267,14 @@ export async function updateEducation(
   return run(async () => {
     await assertAdmin();
     const d = educationInput.parse(input);
-    await prisma.education.update({ where: { id }, data: d });
+    const { translations, ...fields } = d;
+    await prisma.education.update({
+      where: { id },
+      data: {
+        ...fields,
+        ...translationsData(translations, TRANSLATABLE.education),
+      },
+    });
     await audit("education.update", "Education", id);
     await revalidateContent(["educations"], ["/"]);
     return undefined;

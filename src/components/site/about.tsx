@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { Briefcase, Mail, MapPin } from "lucide-react";
 import type { ProfileVM, SettingsVM } from "@/lib/content-types";
 import { isOptimizableImageUrl } from "@/lib/media-format";
@@ -12,6 +13,7 @@ export default function About({
   profile: ProfileVM;
   settings: SettingsVM;
 }) {
+  const t = useTranslations("About");
   const paragraphs = profile.description
     .split(/\n\s*\n|\n/)
     .map((p) => p.trim())
@@ -20,13 +22,13 @@ export default function About({
   const facts = [
     settings.address && {
       icon: MapPin,
-      label: "Localisation",
+      label: t("location"),
       value: settings.address,
     },
-    { icon: Briefcase, label: "Statut", value: "Ouvert aux opportunités" },
+    { icon: Briefcase, label: t("status"), value: t("statusValue") },
     settings.contactEmail && {
       icon: Mail,
-      label: "Email",
+      label: t("email"),
       value: settings.contactEmail,
       href: `mailto:${settings.contactEmail}`,
     },
@@ -44,7 +46,9 @@ export default function About({
           <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border bg-muted shadow-lg shadow-foreground/[0.04]">
             <Image
               src={profile.image}
-              alt={`Portrait de ${profile.name.replace(/[<>/]/g, "").trim()}`}
+              alt={t("portraitAlt", {
+                name: profile.name.replace(/[<>/]/g, "").trim(),
+              })}
               fill
               unoptimized={!isOptimizableImageUrl(profile.image)}
               sizes="(min-width: 1024px) 400px, 90vw"
@@ -55,7 +59,7 @@ export default function About({
 
         <div>
           <SectionHeader
-            eyebrow="À propos"
+            eyebrow={t("eyebrow")}
             title={
               <>
                 {profile.aboutTitle}{" "}

@@ -5,9 +5,15 @@ import { updateSettings } from "@/lib/actions/singletons";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Field, Panel } from "./ui";
+import TranslationsEditor, {
+  translationsFromJson,
+  translationsToPayload,
+  type TranslationField,
+} from "./TranslationsEditor";
 import { useAction, useUnsavedWarning } from "./use-action";
 
 export interface SettingsFormValues {
+  translations?: unknown;
   siteTitle: string;
   metaDescription: string;
   contactEmail: string;
@@ -17,12 +23,26 @@ export interface SettingsFormValues {
   resumeExternalUrl: string;
 }
 
+const SETTINGS_FIELDS: TranslationField[] = [
+  { key: "siteTitle", label: "Titre du site" },
+  {
+    key: "metaDescription",
+    label: "Description (moteurs de recherche)",
+    kind: "textarea",
+  },
+  { key: "footerTagline", label: "Phrase du pied de page", kind: "textarea" },
+  { key: "address", label: "Adresse" },
+];
+
 export default function SettingsForm({
   initial,
 }: {
   initial: SettingsFormValues;
 }) {
   const [v, setV] = useState(initial);
+  const [tr, setTr] = useState(() =>
+    translationsFromJson(initial.translations, SETTINGS_FIELDS),
+  );
   const [dirty, setDirty] = useState(false);
   const { pending, execute } = useAction();
   useUnsavedWarning(dirty && !pending);
@@ -37,9 +57,16 @@ export default function SettingsForm({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const res = await execute(() => updateSettings(v), {
-      success: "Paramètres enregistrés.",
-    });
+    const res = await execute(
+      () =>
+        updateSettings({
+          ...v,
+          translations: translationsToPayload(tr, SETTINGS_FIELDS),
+        }),
+      {
+        success: "Paramètres enregistrés.",
+      },
+    );
     if (res.ok) setDirty(false);
   }
 
@@ -128,6 +155,16 @@ export default function SettingsForm({
         </div>
       </Panel>
 
+      <TranslationsEditor
+        idPrefix="settings"
+        fields={SETTINGS_FIELDS}
+        base={{ ...v }}
+        value={tr}
+        onChange={(next) => {
+          setTr(next);
+          setDirty(true);
+        }}
+      />
       <div className="flex items-center justify-end gap-3">
         {dirty && (
           <span className="mr-auto text-xs text-muted-foreground">

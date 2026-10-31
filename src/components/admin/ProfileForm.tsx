@@ -6,14 +6,26 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import MediaPicker from "./MediaPicker";
 import { Field } from "./ui";
+import TranslationsEditor, {
+  translationsFromJson,
+  translationsToPayload,
+  type TranslationField,
+} from "./TranslationsEditor";
 import { useAction, useUnsavedWarning } from "./use-action";
 
 export interface ProfileFormValues {
+  translations?: unknown;
   aboutTitle: string;
   aboutHighlight: string;
   description: string;
   image: string;
 }
+
+const PROFILE_FIELDS: TranslationField[] = [
+  { key: "aboutTitle", label: "Titre" },
+  { key: "aboutHighlight", label: "Mot mis en avant" },
+  { key: "description", label: "Description", kind: "textarea" },
+];
 
 export default function ProfileForm({
   initial,
@@ -21,6 +33,9 @@ export default function ProfileForm({
   initial: ProfileFormValues;
 }) {
   const [v, setV] = useState(initial);
+  const [tr, setTr] = useState(() =>
+    translationsFromJson(initial.translations, PROFILE_FIELDS),
+  );
   const [dirty, setDirty] = useState(false);
   const { pending, execute } = useAction();
   useUnsavedWarning(dirty && !pending);
@@ -35,9 +50,16 @@ export default function ProfileForm({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const res = await execute(() => updateProfile(v), {
-      success: "Présentation enregistrée.",
-    });
+    const res = await execute(
+      () =>
+        updateProfile({
+          ...v,
+          translations: translationsToPayload(tr, PROFILE_FIELDS),
+        }),
+      {
+        success: "Présentation enregistrée.",
+      },
+    );
     if (res.ok) setDirty(false);
   }
 
@@ -82,6 +104,16 @@ export default function ProfileForm({
           onChange={(url) => set("image", url as string)}
         />
       </Field>
+      <TranslationsEditor
+        idPrefix="profile"
+        fields={PROFILE_FIELDS}
+        base={{ ...v }}
+        value={tr}
+        onChange={(next) => {
+          setTr(next);
+          setDirty(true);
+        }}
+      />
       <div className="flex items-center justify-end gap-3">
         {dirty && (
           <span className="mr-auto text-xs text-muted-foreground">

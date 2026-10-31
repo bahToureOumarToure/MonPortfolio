@@ -58,8 +58,10 @@ const lines: React.ReactNode[] = [
 /** Carte « éditeur de code » décorative du hero (s'adapte au thème). */
 export function CodeCard() {
   return (
+    // Du code : toujours de gauche à droite, même en arabe.
     <div
       aria-hidden="true"
+      dir="ltr"
       className="w-full overflow-hidden rounded-xl border bg-card shadow-xl shadow-foreground/[0.04]"
     >
       <div className="flex items-center gap-2 border-b bg-muted/50 px-4 py-3">
