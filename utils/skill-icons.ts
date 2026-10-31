@@ -30,22 +30,29 @@ import {
   SiLinux,
   SiLangchain,
   SiTensorflow,
+  SiClaude,
 } from "react-icons/si";
 import { IconType } from "react-icons";
 import {
+  TbAffiliate,
   TbBrain,
   TbBrandCSharp,
   TbBook,
   TbBulb,
   TbCode,
   TbCompass,
+  TbDatabaseSearch,
   TbEar,
   TbFlame,
   TbHeartHandshake,
   TbInfinity,
+  TbMessageChatbot,
   TbNetwork,
   TbPhoto,
   TbRefresh,
+  TbRobot,
+  TbRocket,
+  TbSparkles,
   TbSql,
   TbUsersGroup,
   TbVectorBezier,
@@ -197,6 +204,28 @@ export const getSkillIcon = (skill: string): IconType => {
       return SiLangchain;
     case "tensorflow":
       return SiTensorflow;
+    case "claude code":
+    case "claude":
+      return SiClaude;
+    case "antigravity":
+    case "google antigravity":
+      return TbRocket;
+    case "rag":
+    case "retrieval-augmented generation":
+      return TbDatabaseSearch;
+    case "agentic ai":
+    case "ai agents":
+    case "ia agentique":
+      return TbRobot;
+    case "multi-agent ai":
+    case "multi-agent systems":
+    case "multi-agents":
+      return TbAffiliate;
+    case "llm":
+    case "llms":
+      return TbMessageChatbot;
+    case "prompt engineering":
+      return TbSparkles;
 
     // --- Soft skills ---
     case "agile":
@@ -363,6 +392,9 @@ export const getSkillColor = (skill: string): string => {
     // --- IA ---
     case "tensorflow":
       return "#FF6F00";
+    case "claude code":
+    case "claude":
+      return "#D97757";
 
     // Pas de couleur de marque : l'icône prend la couleur d'accent du thème.
     default:

@@ -51,6 +51,13 @@ export const skillsData: Skill[] = [
   { name: "Deep Learning", category: "Data & IA" },
   { name: "LangChain", category: "Data & IA" },
   { name: "TensorFlow", category: "Data & IA" },
+  { name: "Claude Code", category: "Data & IA" },
+  { name: "Antigravity", category: "Data & IA" },
+  { name: "RAG", category: "Data & IA" },
+  { name: "Agentic AI", category: "Data & IA" },
+  { name: "Multi-Agent AI", category: "Data & IA" },
+  { name: "LLM", category: "Data & IA" },
+  { name: "Prompt Engineering", category: "Data & IA" },
 
   // --- Mobile ---
   { name: "Flutter", category: "Mobile" },

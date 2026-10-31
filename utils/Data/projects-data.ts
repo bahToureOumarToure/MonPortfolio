@@ -53,7 +53,7 @@ export const projectsData = [
     id: 1,
     name: "HubEats",
     description:
-      "Plateforme full-stack de livraison de restauration inspirée des marketplaces type Uber Eats, développée comme Projet de Fin d'Année (PFA). Couvre l'ensemble du cycle commande/paiement/suivi livreur avec une interface client moderne, un espace restaurateur, et un dashboard livreur en temps réel.",
+      "Plateforme full-stack de livraison de restauration inspirée des marketplaces type Uber Eats, développée comme Projet de Fin d'Année (PFA). Couvre l'ensemble du cycle commande/paiement/suivi livreur avec une interface client moderne, un espace restaurateur, et un dashboard livreur en temps réel. Le projet intègre également une solution intelligente.",
     tools: ["Spring Boot", "React", "PostgresSql", "Docker", "REST API"],
     role: "Full-Stack Developer (PFA)",
     code: "https://github.com/bahToureOumarToure/hubeats",
@@ -65,6 +65,7 @@ export const projectsData = [
       "Conception complète d'une marketplace multi-acteurs (client, restaurateur, livreur).",
       "Mise en place d'un suivi de commande en temps réel.",
       "Conteneurisation Docker pour faciliter le déploiement.",
+      "Intégration d'une solution intelligente à la plateforme.",
     ],
     challenges: [
       "Modélisation d'un workflow complexe entre 3 types d'utilisateurs.",
