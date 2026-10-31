@@ -1,7 +1,8 @@
+// Sections de l'accueil (libellés traduits : messages/*.json › Nav).
 export const NAV_ITEMS = [
-  { label: "À propos", id: "about" },
-  { label: "Parcours", id: "experience" },
-  { label: "Compétences", id: "skills" },
-  { label: "Projets", id: "projects" },
-  { label: "Contact", id: "contact" },
+  { id: "about" },
+  { id: "experience" },
+  { id: "skills" },
+  { id: "projects" },
+  { id: "contact" },
 ] as const;

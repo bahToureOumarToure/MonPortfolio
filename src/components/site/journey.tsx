@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Briefcase, GraduationCap } from "lucide-react";
 import type { EducationVM, ExperienceVM } from "@/lib/content-types";
 import { Reveal } from "./reveal";
@@ -5,7 +6,7 @@ import { Section, SectionHeader } from "./section";
 
 function Timeline({ children }: { children: React.ReactNode }) {
   return (
-    <ol className="relative flex flex-col gap-6 border-l pl-6 sm:pl-8">
+    <ol className="relative flex flex-col gap-6 border-s ps-6 sm:ps-8">
       {children}
     </ol>
   );
@@ -26,7 +27,7 @@ function TimelineItem({
 }) {
   return (
     <li className="relative">
-      <span className="absolute -left-[37px] top-5 flex h-6 w-6 items-center justify-center rounded-full border bg-background text-primary sm:-left-[45px]">
+      <span className="absolute -start-[37px] top-5 flex h-6 w-6 items-center justify-center rounded-full border bg-background text-primary sm:-start-[45px]">
         <Icon className="h-3.5 w-3.5" />
       </span>
       <Reveal>
@@ -62,20 +63,21 @@ export default function Journey({
   experiences: ExperienceVM[];
   educations: EducationVM[];
 }) {
+  const t = useTranslations("Journey");
   if (experiences.length === 0 && educations.length === 0) return null;
 
   return (
     <Section id="experience">
       <SectionHeader
-        eyebrow="Parcours"
-        title="Expérience & formation"
-        description="Ce que je recherche aujourd'hui et le chemin parcouru jusqu'ici."
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
       />
       <div className="grid gap-12 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         {experiences.length > 0 && (
           <div>
             <h3 className="mb-6 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              <Briefcase className="h-4 w-4" /> Expérience
+              <Briefcase className="h-4 w-4" /> {t("experience")}
             </h3>
             <Timeline>
               {experiences.map((exp) => (
@@ -105,7 +107,7 @@ export default function Journey({
         {educations.length > 0 && (
           <div>
             <h3 className="mb-6 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              <GraduationCap className="h-4 w-4" /> Formation
+              <GraduationCap className="h-4 w-4" /> {t("education")}
             </h3>
             <Timeline>
               {educations.map((edu) => (

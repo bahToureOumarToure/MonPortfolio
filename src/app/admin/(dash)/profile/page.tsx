@@ -23,6 +23,7 @@ export default async function ProfileAdminPage() {
     ctaPrimaryHref: hero?.ctaPrimaryHref ?? "/#contact",
     ctaResumeLabel: hero?.ctaResumeLabel ?? "Get Resume",
     heroImage: hero?.heroImage?.url ?? "",
+    translations: hero?.translations ?? null,
   };
 
   const profileInitial = {
@@ -30,6 +31,7 @@ export default async function ProfileAdminPage() {
     aboutHighlight: profile?.aboutHighlight ?? "The Software Engineer",
     description: profile?.description ?? "",
     image: profile?.image?.url ?? "",
+    translations: profile?.translations ?? null,
   };
 
   return (

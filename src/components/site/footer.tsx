@@ -1,6 +1,7 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { SettingsVM, SocialVM } from "@/lib/content-types";
 import { Container } from "@/components/ui/container";
+import { Link } from "@/i18n/navigation";
 import { Logo } from "./logo";
 import { NAV_ITEMS } from "./nav-items";
 import { SocialLinks } from "./social-links";
@@ -14,6 +15,8 @@ export default function Footer({
   socials: SocialVM[];
   siteName: string;
 }) {
+  const t = useTranslations("Footer");
+  const nav = useTranslations("Nav");
   return (
     <footer className="border-t bg-muted/40">
       <Container className="grid gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr]">
@@ -32,8 +35,8 @@ export default function Footer({
           )}
         </div>
 
-        <nav aria-label="Pied de page">
-          <h2 className="mb-4 text-sm font-semibold">Navigation</h2>
+        <nav aria-label={t("label")}>
+          <h2 className="mb-4 text-sm font-semibold">{t("navigation")}</h2>
           <ul className="flex flex-col gap-2.5 text-sm">
             {NAV_ITEMS.map((item) => (
               <li key={item.id}>
@@ -41,7 +44,7 @@ export default function Footer({
                   href={`/#${item.id}`}
                   className="text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {item.label}
+                  {nav(item.id)}
                 </Link>
               </li>
             ))}
@@ -50,14 +53,14 @@ export default function Footer({
                 href="/projects"
                 className="text-muted-foreground transition-colors hover:text-foreground"
               >
-                Tous les projets
+                {t("allProjects")}
               </Link>
             </li>
           </ul>
         </nav>
 
         <div className="flex flex-col gap-4">
-          <h2 className="text-sm font-semibold">Contact</h2>
+          <h2 className="text-sm font-semibold">{t("contact")}</h2>
           <div className="flex flex-col gap-2.5 text-sm">
             {settings.contactEmail && (
               <a
@@ -70,6 +73,7 @@ export default function Footer({
             {settings.phone && (
               <a
                 href={`tel:${settings.phone.replace(/\s+/g, "")}`}
+                dir="ltr"
                 className="w-fit text-muted-foreground transition-colors hover:text-foreground"
               >
                 {settings.phone}
@@ -83,7 +87,7 @@ export default function Footer({
       <div className="border-t">
         <Container className="flex flex-col items-center justify-between gap-2 py-6 text-xs text-muted-foreground sm:flex-row">
           <p>
-            © {new Date().getFullYear()} {siteName}. Tous droits réservés.
+            {t("rights", { year: new Date().getFullYear(), name: siteName })}
           </p>
           {settings.address && <p>{settings.address}</p>}
         </Container>

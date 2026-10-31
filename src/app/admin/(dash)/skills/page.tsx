@@ -16,6 +16,7 @@ export default async function SkillsAdminPage() {
     color: s.color ?? "",
     order: s.order,
     active: s.active,
+    translations: s.translations,
   }));
 
   return (

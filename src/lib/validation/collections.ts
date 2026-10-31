@@ -28,6 +28,7 @@ export const skillInput = z.object({
   iconKey: z.string().trim().max(80).default(""),
   color: optionalColor,
   active: z.boolean().default(true),
+  translations: z.unknown().optional(),
 });
 export type SkillInput = z.infer<typeof skillInput>;
 
@@ -46,6 +47,7 @@ export const experienceInput = z.object({
   duration: z.string().trim().max(120).default(""),
   details: z.array(z.string().trim().max(500)).max(20).default([]),
   active: z.boolean().default(true),
+  translations: z.unknown().optional(),
 });
 export type ExperienceInput = z.infer<typeof experienceInput>;
 
@@ -54,6 +56,7 @@ export const educationInput = z.object({
   institution: z.string().trim().max(200).default(""),
   duration: z.string().trim().max(120).default(""),
   active: z.boolean().default(true),
+  translations: z.unknown().optional(),
 });
 export type EducationInput = z.infer<typeof educationInput>;
 

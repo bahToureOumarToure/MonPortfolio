@@ -15,6 +15,7 @@ export default function ExperienceManager({
   return (
     <TimelineManager
       initial={initial}
+      subtitleKey="company"
       withDetails
       labels={{
         noun: "Expérience",

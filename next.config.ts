@@ -1,4 +1,7 @@
 import { PHASE_PRODUCTION_BUILD } from "next/constants.js";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
@@ -43,9 +46,9 @@ const nextConfigFunction = async (phase: string) => {
         ],
       },
     });
-    return withPWA(nextConfig);
+    return withNextIntl(withPWA(nextConfig));
   }
-  return nextConfig;
+  return withNextIntl(nextConfig);
 };
 
 export default nextConfigFunction;

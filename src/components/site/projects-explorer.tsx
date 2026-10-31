@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { ProjectVM } from "@/lib/content-types";
 import { cn } from "@/lib/utils";
 import ProjectCard from "./project-card";
@@ -12,6 +13,7 @@ export default function ProjectsExplorer({
 }: {
   projects: ProjectVM[];
 }) {
+  const t = useTranslations("Projects");
   const [tool, setTool] = useState<string | null>(null);
 
   const tools = useMemo(() => {
@@ -34,16 +36,16 @@ export default function ProjectsExplorer({
       {tools.length > 0 && (
         <div
           role="group"
-          aria-label="Filtrer par technologie"
+          aria-label={t("filterLabel")}
           className="flex flex-wrap gap-2"
         >
-          {[null, ...tools].map((t) => {
-            const active = t === tool;
+          {[null, ...tools].map((item) => {
+            const active = item === tool;
             return (
               <button
-                key={t ?? "all"}
+                key={item ?? "all"}
                 type="button"
-                onClick={() => setTool(t)}
+                onClick={() => setTool(item)}
                 aria-pressed={active}
                 className={cn(
                   "rounded-full border px-3.5 py-1.5 text-sm transition-colors",
@@ -52,15 +54,16 @@ export default function ProjectsExplorer({
                     : "bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground",
                 )}
               >
-                {t ?? "Tous"}
+                {item ?? t("all")}
               </button>
             );
           })}
         </div>
       )}
       <p className="text-sm text-muted-foreground" aria-live="polite">
-        {visible.length} projet{visible.length > 1 ? "s" : ""}
-        {tool ? ` avec ${tool}` : ""}
+        {tool
+          ? t("countWith", { count: visible.length, tool })
+          : t("count", { count: visible.length })}
       </p>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {visible.map((project, i) => (

@@ -1,0 +1,136 @@
+{
+  "Meta": {
+    "title": "Bah Oumar Touré | Desarrollador junior - IA, Data, DevOps y Full-Stack",
+    "description": "Portafolio de Bah Oumar Touré, estudiante de ingeniería informática en la ENIAD Berkane. Especializado en IA (Deep Learning, Machine Learning, IA agéntica), Data y BI (Power BI), DevOps y desarrollo Full-Stack (Spring Boot, Next.js, React, Flutter). Disponible para prácticas.",
+    "ogDescription": "Estudiante de ingeniería en la ENIAD Berkane - Full-Stack, DevOps, IA y Data. Disponible para prácticas.",
+    "twitterTitle": "Bah Oumar Touré | Desarrollador junior - Full-Stack, IA",
+    "ogImageAlt": "Portafolio de Bah Oumar Touré - Desarrollador junior en IA, Data, DevOps y Full-Stack",
+    "jobTitle": "Estudiante de ingeniería informática - Desarrollador junior Full-Stack, Data, DevOps e IA",
+    "personDescription": "Estudiante de tercer año del ciclo de ingeniería informática en la ENIAD Berkane: desarrollo Full-Stack, DevOps, arquitecturas de microservicios con Spring Boot, Inteligencia Artificial y Data. En busca de prácticas.",
+    "projectsTitle": "Proyectos",
+    "projectsDescription": "Todos los proyectos de Bah Oumar Touré: aplicaciones full-stack, móviles, de datos y de inteligencia artificial.",
+    "projectNotFound": "Proyecto no encontrado"
+  },
+  "Common": {
+    "skipToContent": "Ir al contenido",
+    "scrollTop": "Volver arriba",
+    "language": "Idioma"
+  },
+  "Nav": {
+    "about": "Sobre mí",
+    "experience": "Trayectoria",
+    "skills": "Habilidades",
+    "projects": "Proyectos",
+    "contact": "Contacto",
+    "contactMe": "Contáctame",
+    "openMenu": "Abrir el menú",
+    "closeMenu": "Cerrar el menú",
+    "main": "Navegación principal",
+    "mobile": "Navegación móvil",
+    "home": "{name} — inicio"
+  },
+  "Hero": {
+    "prefix": ""
+  },
+  "About": {
+    "eyebrow": "Sobre mí",
+    "location": "Ubicación",
+    "status": "Situación",
+    "statusValue": "Abierto a oportunidades",
+    "email": "Correo",
+    "portraitAlt": "Retrato de {name}"
+  },
+  "Journey": {
+    "eyebrow": "Trayectoria",
+    "title": "Experiencia y formación",
+    "description": "Lo que busco hoy y el camino recorrido hasta aquí.",
+    "experience": "Experiencia",
+    "education": "Formación"
+  },
+  "Skills": {
+    "eyebrow": "Habilidades",
+    "title": "Mi stack técnico",
+    "description": "Lenguajes, frameworks, herramientas de DevOps e IA, y las cualidades humanas que los acompañan.",
+    "categories": {
+      "FRONTEND": "Frontend",
+      "BACKEND": "Backend",
+      "LANGAGES": "Lenguajes",
+      "DATABASE": "Bases de datos",
+      "DEVOPS": "DevOps",
+      "DATA_IA": "Data e IA",
+      "MOBILE": "Móvil",
+      "TOOLS": "Herramientas",
+      "SOFT_SKILLS": "Habilidades blandas"
+    }
+  },
+  "Projects": {
+    "eyebrow": "Proyectos",
+    "title": "Proyectos destacados",
+    "description": "Una selección de trabajos: aplicaciones full-stack, móviles, de datos e IA.",
+    "viewAll": "Todos los proyectos",
+    "pageTitle": "Todo lo que he creado",
+    "pageDescription": "Aplicaciones full-stack, móviles, de datos e IA, diseñadas, desarrolladas y desplegadas de principio a fin.",
+    "filterLabel": "Filtrar por tecnología",
+    "all": "Todos",
+    "count": "{count, plural, one {# proyecto} other {# proyectos}}",
+    "countWith": "{count, plural, one {# proyecto} other {# proyectos}} con {tool}",
+    "new": "Nuevo",
+    "demo": "Demo",
+    "code": "Código"
+  },
+  "Project": {
+    "back": "Todos los proyectos",
+    "viewDemo": "Ver la demo",
+    "sourceCode": "Código fuente",
+    "highlights": "Puntos fuertes",
+    "challenges": "Retos superados",
+    "gallery": "Galería",
+    "screenshotAlt": "{name} — captura {index}",
+    "technologies": "Tecnologías",
+    "role": "Rol",
+    "date": "Fecha",
+    "discuss": "Hablemos de este proyecto",
+    "others": "Otros proyectos",
+    "seeAll": "Ver todo"
+  },
+  "Contact": {
+    "eyebrow": "Contacto",
+    "title": "Trabajemos juntos",
+    "description": "¿Una oportunidad de prácticas, un proyecto o simplemente una pregunta? Escríbeme: respondo en menos de 24 horas.",
+    "email": "Correo",
+    "phone": "Teléfono",
+    "location": "Ubicación",
+    "socials": "Redes sociales",
+    "form": {
+      "name": "Nombre",
+      "namePlaceholder": "Ana García",
+      "email": "Correo",
+      "emailPlaceholder": "ana@ejemplo.com",
+      "message": "Mensaje",
+      "messagePlaceholder": "Cuéntame tu proyecto, una oportunidad de prácticas…",
+      "errName": "Indica tu nombre.",
+      "errEmail": "Indica tu correo.",
+      "errEmailInvalid": "Este correo no parece válido.",
+      "errMessage": "Tu mensaje debe tener al menos 10 caracteres.",
+      "notConfigured": "El formulario aún no está configurado. Escríbeme directamente a {email}.",
+      "failed": "El envío ha fallado. Inténtalo de nuevo o escríbeme a {email}.",
+      "sent": "Mensaje enviado, ¡gracias! Te responderé muy pronto.",
+      "sending": "Enviando…",
+      "send": "Enviar"
+    }
+  },
+  "Footer": {
+    "label": "Pie de página",
+    "navigation": "Navegación",
+    "allProjects": "Todos los proyectos",
+    "contact": "Contacto",
+    "rights": "© {year} {name}. Todos los derechos reservados."
+  },
+  "NotFound": {
+    "code": "Error 404",
+    "title": "Página no encontrada",
+    "text": "La página que buscas no existe o ha cambiado de dirección.",
+    "home": "Volver al inicio",
+    "projects": "Ver los proyectos"
+  }
+}

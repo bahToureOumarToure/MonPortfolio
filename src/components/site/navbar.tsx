@@ -1,15 +1,17 @@
 "use client";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
+import { Link, usePathname } from "@/i18n/navigation";
+import { LanguageSwitcher } from "./language-switcher";
 import { Logo } from "./logo";
 import { NAV_ITEMS } from "./nav-items";
 
 export default function Navbar({ siteName }: { siteName: string }) {
+  const t = useTranslations("Nav");
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [open, setOpen] = useState(false);
@@ -75,13 +77,13 @@ export default function Navbar({ siteName }: { siteName: string }) {
         <Link
           href="/"
           className="flex items-center gap-2.5 rounded-md text-sm font-semibold tracking-tight"
-          aria-label={`${siteName} — accueil`}
+          aria-label={t("home", { name: siteName })}
         >
           <Logo />
           <span className="hidden sm:inline">{siteName}</span>
         </Link>
 
-        <nav aria-label="Navigation principale" className="hidden md:block">
+        <nav aria-label={t("main")} className="hidden md:block">
           <ul className="flex items-center gap-1">
             {NAV_ITEMS.map((item) => (
               <li key={item.id}>
@@ -95,7 +97,7 @@ export default function Navbar({ siteName }: { siteName: string }) {
                       : "text-muted-foreground",
                   )}
                 >
-                  {item.label}
+                  {t(item.id)}
                 </Link>
               </li>
             ))}
@@ -103,14 +105,15 @@ export default function Navbar({ siteName }: { siteName: string }) {
         </nav>
 
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           <Button asChild size="sm" className="hidden sm:inline-flex">
-            <Link href={href("contact")}>Me contacter</Link>
+            <Link href={href("contact")}>{t("contactMe")}</Link>
           </Button>
           <Button
             variant="ghost"
             size="icon"
             className="md:hidden"
-            aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-label={open ? t("closeMenu") : t("openMenu")}
             aria-expanded={open}
             aria-controls="mobile-nav"
             onClick={() => setOpen((v) => !v)}
@@ -123,7 +126,7 @@ export default function Navbar({ siteName }: { siteName: string }) {
       {open && (
         <nav
           id="mobile-nav"
-          aria-label="Navigation mobile"
+          aria-label={t("mobile")}
           className="border-t bg-background md:hidden"
         >
           <Container className="flex flex-col py-3">
@@ -134,12 +137,12 @@ export default function Navbar({ siteName }: { siteName: string }) {
                 onClick={() => setOpen(false)}
                 className="rounded-md px-2 py-3 text-base text-foreground transition-colors hover:bg-muted"
               >
-                {item.label}
+                {t(item.id)}
               </Link>
             ))}
             <Button asChild className="mt-3">
               <Link href={href("contact")} onClick={() => setOpen(false)}>
-                Me contacter
+                {t("contactMe")}
               </Link>
             </Button>
           </Container>

@@ -13,3 +13,5 @@ Règles :
 3. Une migration qui **modifie des données** doit s'accompagner d'une
    nouvelle valeur de `CACHE_VERSION` dans `src/lib/queries.ts` (le cache de
    données Vercel survit aux redéploiements).
+4. Les textes peuvent contenir `;` ou `--` à l'intérieur des chaînes `'…'`
+   (apostrophe doublée `''`) : `db-sync.mjs` ne coupe qu'en dehors des chaînes.

@@ -44,6 +44,41 @@ test.describe("Admin", () => {
     await expect(row).toHaveCount(0);
   });
 
+  test("traductions : nom traduit d'une compétence affiché en français", async ({
+    page,
+    browser,
+  }) => {
+    await login(page);
+    await page.goto("/admin/skills");
+    const stamp = Date.now();
+    const name = `E2E en ${stamp}`;
+    const french = `E2E fr ${stamp}`;
+    await page.locator("#s-name").fill(name);
+    await page.locator("#s-cat").selectOption("TOOLS");
+    await page.locator("#s-tr-fr").fill(french);
+    await page
+      .locator("#skill-form")
+      .getByRole("button", { name: "Ajouter" })
+      .click();
+    await expect(page.getByText("Compétence ajoutée.")).toBeVisible();
+
+    const visitor = await browser.newPage();
+    await visitor.goto("/fr");
+    await expect(
+      visitor.locator("#skills").getByText(french, { exact: true }).first(),
+    ).toBeAttached();
+    await visitor.goto("/");
+    await expect(
+      visitor.locator("#skills").getByText(name, { exact: true }).first(),
+    ).toBeAttached();
+    await visitor.close();
+
+    const row = page.locator("li", { hasText: name });
+    page.once("dialog", (d) => d.accept());
+    await row.getByRole("button", { name: "Supprimer" }).click();
+    await expect(page.getByText("Compétence supprimée.")).toBeVisible();
+  });
+
   test("paramètres : erreur de validation lisible", async ({ page }) => {
     await login(page);
     await page.goto("/admin/settings");

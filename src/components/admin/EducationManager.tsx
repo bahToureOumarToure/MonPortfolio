@@ -15,6 +15,7 @@ export default function EducationManager({
   return (
     <TimelineManager
       initial={initial}
+      subtitleKey="institution"
       withDetails={false}
       labels={{
         noun: "Formation",

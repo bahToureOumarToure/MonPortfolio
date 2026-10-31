@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import createIntlMiddleware from "next-intl/middleware";
+import { routing } from "./i18n/routing";
 
 // Gate "edge" bon marché : vérifie la signature/expiration du cookie de session.
 // Le contrôle AUTORITAIRE (session DB valide + rôle admin) est refait côté
@@ -17,7 +19,10 @@ function secret(): Uint8Array {
 const PUBLIC_PATHS = ["/admin/login", "/admin/setup"];
 const PUBLIC_API_PREFIXES = ["/api/admin/auth", "/api/admin/setup"];
 
-export async function middleware(req: NextRequest) {
+// Site public : langue dans l'URL (/, /fr, /es, /ar).
+const intl = createIntlMiddleware(routing);
+
+async function adminGate(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const isPublic =
@@ -49,6 +54,20 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+    return adminGate(req);
+  }
+  return intl(req);
+}
+
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/api/admin/:path*",
+    // Pages du site : tout sauf l'API, les fichiers internes de Next/Vercel
+    // et les fichiers statiques (robots.txt, sitemap.xml, images, sw.js…).
+    "/((?!api|admin|_next|_vercel|.*\\..*).*)",
+  ],
 };

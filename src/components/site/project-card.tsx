@@ -1,7 +1,8 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ArrowUpRight, Github, Globe } from "lucide-react";
 import type { ProjectVM } from "@/lib/content-types";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "@/i18n/navigation";
 import { ProjectCover } from "./project-cover";
 
 const MAX_TOOLS = 4;
@@ -20,6 +21,7 @@ export default function ProjectCard({
   project: ProjectVM;
   priority?: boolean;
 }) {
+  const t = useTranslations("Projects");
   const extra = project.tools.length - MAX_TOOLS;
 
   return (
@@ -33,8 +35,8 @@ export default function ProjectCard({
           className="transition-transform duration-500 group-hover:scale-[1.03]"
         />
         {isRecent(project.date) && (
-          <Badge variant="solid" className="absolute left-3 top-3 shadow-sm">
-            Nouveau
+          <Badge variant="solid" className="absolute start-3 top-3 shadow-sm">
+            {t("new")}
           </Badge>
         )}
       </div>
@@ -49,7 +51,7 @@ export default function ProjectCard({
               {project.name}
             </Link>
           </h3>
-          <ArrowUpRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+          <ArrowUpRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary rtl:-scale-x-100" />
         </div>
         {project.role && (
           <p className="-mt-1.5 text-xs font-medium text-primary">
@@ -82,7 +84,7 @@ export default function ProjectCard({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
               >
-                <Globe className="h-4 w-4" /> Démo
+                <Globe className="h-4 w-4" /> {t("demo")}
               </a>
             )}
             {project.code && (
@@ -92,7 +94,7 @@ export default function ProjectCard({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
               >
-                <Github className="h-4 w-4" /> Code
+                <Github className="h-4 w-4" /> {t("code")}
               </a>
             )}
           </div>

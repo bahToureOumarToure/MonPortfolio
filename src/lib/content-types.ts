@@ -2,7 +2,7 @@
 // Ils gardent la forme attendue par les composants existants (ex. Project.id numérique)
 // afin de minimiser les changements de rendu lors du passage aux données dynamiques.
 
-import type { SkillCategory } from "../../utils/Data/skills";
+import type { SkillCategoryKey } from "./skill-categories";
 
 export interface ProjectVM {
   id: number; // legacyId — préserve les routes /projects/[id] et ProjectCardProps
@@ -66,7 +66,7 @@ export interface SkillVM {
   color: string | null;
 }
 
-export type GroupedSkills = Record<SkillCategory, SkillVM[]>;
+export type GroupedSkills = Partial<Record<SkillCategoryKey, SkillVM[]>>;
 
 export interface EducationVM {
   id: string | number;

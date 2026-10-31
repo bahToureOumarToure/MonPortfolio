@@ -8,6 +8,12 @@ import DeleteButton from "./DeleteButton";
 import ReorderButtons from "./ReorderButtons";
 import { Checkbox, EmptyState, Field, Panel, StatusBadge } from "./ui";
 import { move, useAction } from "./use-action";
+import TranslationsEditor, {
+  translationsFromJson,
+  translationsToPayload,
+  type TranslationField,
+  type TranslationsState,
+} from "./TranslationsEditor";
 
 export interface TimelineRow {
   id: string;
@@ -16,6 +22,7 @@ export interface TimelineRow {
   duration: string;
   details: string[];
   active: boolean;
+  translations?: unknown;
 }
 
 interface FormState {
@@ -24,6 +31,7 @@ interface FormState {
   duration: string;
   details: string;
   active: boolean;
+  tr: TranslationsState;
 }
 
 const empty = (): FormState => ({
@@ -32,6 +40,7 @@ const empty = (): FormState => ({
   duration: "",
   details: "",
   active: true,
+  tr: {},
 });
 
 /**
@@ -43,6 +52,7 @@ export default function TimelineManager({
   labels,
   withDetails,
   actions,
+  subtitleKey,
 }: {
   initial: TimelineRow[];
   labels: {
@@ -52,6 +62,8 @@ export default function TimelineManager({
     titlePlaceholder: string;
   };
   withDetails: boolean;
+  /** Nom du champ « sous-titre » en base (entreprise ou établissement). */
+  subtitleKey: "company" | "institution";
   actions: {
     create: (input: unknown) => Promise<ActionResult>;
     update: (id: string, input: unknown) => Promise<ActionResult>;
@@ -72,6 +84,15 @@ export default function TimelineManager({
   const { pending, execute } = useAction();
   useEffect(() => setRows(initial), [initial]);
 
+  const trFields: TranslationField[] = [
+    { key: "title", label: "Titre" },
+    { key: subtitleKey, label: labels.subtitle },
+    { key: "duration", label: "Période" },
+    ...(withDetails
+      ? [{ key: "details", label: "Détails", kind: "lines" as const }]
+      : []),
+  ];
+
   function edit(r: TimelineRow) {
     setEditingId(r.id);
     setForm({
@@ -80,6 +101,7 @@ export default function TimelineManager({
       duration: r.duration,
       details: r.details.join("\n"),
       active: r.active,
+      tr: translationsFromJson(r.translations, trFields),
     });
     document
       .getElementById("timeline-form")
@@ -92,13 +114,16 @@ export default function TimelineManager({
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    const payload = actions.toPayload({
-      ...form,
-      details: form.details
-        .split("\n")
-        .map((s) => s.trim())
-        .filter(Boolean),
-    });
+    const payload = {
+      ...(actions.toPayload({
+        ...form,
+        details: form.details
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      }) as object),
+      translations: translationsToPayload(form.tr, trFields),
+    };
     const res = await execute(
       () =>
         editingId
@@ -177,6 +202,18 @@ export default function TimelineManager({
               />
             </Field>
           )}
+          <TranslationsEditor
+            idPrefix={`timeline-${subtitleKey}`}
+            fields={trFields}
+            base={{
+              title: form.title,
+              [subtitleKey]: form.subtitle,
+              duration: form.duration,
+              details: form.details,
+            }}
+            value={form.tr}
+            onChange={(tr) => setForm({ ...form, tr })}
+          />
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Checkbox
               checked={form.active}

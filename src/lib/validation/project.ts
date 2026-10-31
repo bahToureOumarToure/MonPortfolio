@@ -42,6 +42,7 @@ export const projectInput = z.object({
     )
     .max(30)
     .default([]),
+  translations: z.unknown().optional(),
 });
 
 export type ProjectInput = z.infer<typeof projectInput>;

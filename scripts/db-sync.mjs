@@ -36,15 +36,38 @@ if (!url) {
   process.exit(strict ? 1 : 0);
 }
 
-/** Découpe un fichier SQL simple en instructions (pas de ; dans les chaînes). */
+/**
+ * Découpe un fichier SQL en instructions : coupe sur « ; » et retire les
+ * commentaires « -- », sauf à l'intérieur des chaînes '…' (les textes traduits
+ * peuvent contenir ces caractères ; '' = apostrophe échappée).
+ */
 function statements(sql) {
-  return sql
-    .split("\n")
-    .filter((line) => !line.trim().startsWith("--"))
-    .join("\n")
-    .split(";")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const out = [];
+  let current = "";
+  let inString = false;
+  for (let i = 0; i < sql.length; i++) {
+    const c = sql[i];
+    if (inString) {
+      current += c;
+      if (c === "'") {
+        if (sql[i + 1] === "'") current += sql[++i];
+        else inString = false;
+      }
+    } else if (c === "'") {
+      inString = true;
+      current += c;
+    } else if (c === "-" && sql[i + 1] === "-") {
+      while (i < sql.length && sql[i] !== "\n") i++;
+      current += "\n";
+    } else if (c === ";") {
+      if (current.trim()) out.push(current.trim());
+      current = "";
+    } else {
+      current += c;
+    }
+  }
+  if (current.trim()) out.push(current.trim());
+  return out;
 }
 
 // Journal des migrations appliquées (DDL identique au modèle Prisma SqlMigration).

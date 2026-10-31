@@ -2,8 +2,11 @@
 // - Lectures depuis la DB (Prisma), mises en cache et taguées pour la revalidation.
 // - Repli automatique sur le contenu existant (utils/Data/*) si la DB est
 //   indisponible ou non encore seedée => parité garantie, build jamais cassé.
+// - Multilingue : les colonnes contiennent le texte anglais (langue par
+//   défaut) et `translations` les versions fr / es / ar. Le cache garde la
+//   ligne complète ; la langue est appliquée à la lecture (translate()).
 import { unstable_cache } from "next/cache";
-import { SkillCategory as PrismaSkillCategory } from "@prisma/client";
+import type { Locale } from "@/i18n/routing";
 import { prisma } from "./db";
 import type {
   HeroVM,
@@ -11,18 +14,23 @@ import type {
   SettingsVM,
   SocialVM,
   GroupedSkills,
+  SkillVM,
   ProjectVM,
   ExperienceVM,
   EducationVM,
 } from "./content-types";
+import { SKILL_CATEGORIES, type SkillCategoryKey } from "./skill-categories";
+import { TRANSLATABLE, translate } from "./translate";
 import { personalData } from "../../utils/Data/PersonalData";
 import { projectsData } from "../../utils/Data/projects-data";
-import {
-  getSkillsByCategory,
-  type SkillCategory,
-} from "../../utils/Data/skills";
+import { skillsData } from "../../utils/Data/skills";
 import { experiences as experiencesData } from "../../utils/Data/experience";
 import { educations as educationsData } from "../../utils/Data/educations";
+import {
+  heroContent,
+  profileContent,
+  settingsContent,
+} from "../../utils/Data/site-content";
 import { getSocialColor } from "../../utils/social-icons";
 import { DEFAULT_THEME, sanitizeTheme, type ThemeVM } from "./theme";
 
@@ -32,7 +40,7 @@ import { DEFAULT_THEME, sanitizeTheme, type ThemeVM } from "./theme";
  * des données (sinon l'ancien contenu resterait servi jusqu'à la prochaine
  * modification dans l'admin).
  */
-const CACHE_VERSION = "2026-10-31";
+const CACHE_VERSION = "2026-10-31-i18n";
 
 export const CONTENT_TAGS = {
   hero: "hero",
@@ -46,16 +54,28 @@ export const CONTENT_TAGS = {
   theme: "theme",
 } as const;
 
-const CATEGORY_LABEL: Record<PrismaSkillCategory, SkillCategory> = {
-  FRONTEND: "Frontend",
-  BACKEND: "Backend",
-  LANGAGES: "Langages",
-  DATABASE: "Database",
-  DATA_IA: "Data & IA",
-  MOBILE: "Mobile",
-  TOOLS: "Tools",
-  DEVOPS: "DevOps",
-  SOFT_SKILLS: "Soft skills",
+/** Une ligne de contenu avec ses traductions (forme mise en cache). */
+type WithTranslations<T> = T & { translations: unknown };
+
+function localize<T extends object>(
+  row: WithTranslations<T>,
+  locale: Locale,
+  fields: readonly string[],
+): T {
+  const { translations, ...base } = row;
+  return translate(base as T, translations, locale, fields);
+}
+
+const DATA_CATEGORY: Record<string, SkillCategoryKey> = {
+  Frontend: "FRONTEND",
+  Backend: "BACKEND",
+  Langages: "LANGAGES",
+  Database: "DATABASE",
+  "Data & IA": "DATA_IA",
+  Mobile: "MOBILE",
+  Tools: "TOOLS",
+  DevOps: "DEVOPS",
+  "Soft skills": "SOFT_SKILLS",
 };
 
 const DEFAULT_SECTIONS: SettingsVM["sections"] = {
@@ -69,48 +89,39 @@ const DEFAULT_SECTIONS: SettingsVM["sections"] = {
 };
 
 // ------------------------------------------------------------------
-// Valeurs par défaut (parité avec le contenu actuellement hardcodé)
+// Valeurs par défaut (contenu de utils/Data, avec ses traductions)
 // ------------------------------------------------------------------
-function defaultSettings(): SettingsVM {
+function defaultSettings(): WithTranslations<SettingsVM> {
+  const { translations, ...text } = settingsContent;
   return {
-    siteTitle: "Bah Oumar Touré Portfolio",
-    metaDescription:
-      "Portfolio de Bah Oumar Touré — Étudiant ingénieur ENIAD Berkane. IA, Data, DevOps & Full-Stack.",
+    ...text,
     contactEmail: personalData.email,
     phone: personalData.phone,
-    address: personalData.address,
-    footerTagline:
-      "A curated showcase of high-performance full-stack applications, AI experiments, and intuitive digital experiences built with purpose.",
     resumeUrl: personalData.resume,
     sections: DEFAULT_SECTIONS,
+    translations,
   };
 }
 
-function defaultHero(resumeUrl: string): HeroVM {
+function defaultHero(resumeUrl: string): WithTranslations<HeroVM> {
+  const { translations, ...text } = heroContent;
   return {
-    tagline: "WELCOME TO MY UNIVERSE",
-    headingTop: "Crafting Digital",
-    headingBottom: "Masterpieces",
+    ...text,
     name: personalData.name,
-    designation: personalData.designation,
-    alternateWords: personalData.designationAlternateWords,
-    subheading:
-      "dedicated to building high-performance, user-focused digital products",
-    ctaPrimaryLabel: "Let's Collaborate",
     ctaPrimaryHref: "/#contact",
-    ctaResumeLabel: "Get Resume",
     heroImage: null,
     resumeUrl,
+    translations,
   };
 }
 
-function defaultProfile(): ProfileVM {
+function defaultProfile(): WithTranslations<ProfileVM> {
+  const { translations, ...text } = profileContent;
   return {
-    aboutTitle: "About",
-    aboutHighlight: "The Software Engineer",
-    description: personalData.description,
+    ...text,
     image: personalData.profile,
     name: personalData.name,
+    translations,
   };
 }
 
@@ -161,20 +172,21 @@ function defaultSocials(): SocialVM[] {
   ];
 }
 
-function defaultSkillsGrouped(): GroupedSkills {
-  const grouped = getSkillsByCategory();
-  const out = {} as GroupedSkills;
-  (Object.keys(grouped) as SkillCategory[]).forEach((cat) => {
-    out[cat] = grouped[cat].map((name) => ({
-      name,
-      iconKey: name,
-      color: null,
-    }));
-  });
-  return out;
+type SkillRow = WithTranslations<SkillVM> & { category: SkillCategoryKey };
+
+function defaultSkills(): SkillRow[] {
+  return skillsData.map((s) => ({
+    name: s.name,
+    iconKey: s.name,
+    color: null,
+    category: DATA_CATEGORY[s.category] ?? "TOOLS",
+    translations: Object.fromEntries(
+      Object.entries(s.translations ?? {}).map(([l, name]) => [l, { name }]),
+    ),
+  }));
 }
 
-function defaultProjects(): ProjectVM[] {
+function defaultProjects(): WithTranslations<ProjectVM>[] {
   return projectsData.map((p) => ({
     id: p.id,
     name: p.name.trim(),
@@ -188,30 +200,33 @@ function defaultProjects(): ProjectVM[] {
     featured: false,
     highlights: p.highlights ?? [],
     challenges: p.challenges ?? [],
+    translations: p.translations,
   }));
 }
 
-function defaultEducations(): EducationVM[] {
+function defaultEducations(): WithTranslations<EducationVM>[] {
   return educationsData.map((e) => ({
     id: e.id,
     title: e.title,
     institution: e.institution,
     duration: e.duration,
+    translations: e.translations,
   }));
 }
 
-function defaultExperiences(): ExperienceVM[] {
+function defaultExperiences(): WithTranslations<ExperienceVM>[] {
   return experiencesData.map((e) => ({
     id: e.id,
     title: e.title,
     company: e.company,
     duration: e.duration,
     details: e.details,
+    translations: e.translations,
   }));
 }
 
 // ------------------------------------------------------------------
-// Lectures (DB -> VM, avec repli)
+// Lectures en cache (DB -> ligne complète, avec repli)
 // ------------------------------------------------------------------
 /** Thème du site ; thème clair par défaut si la table n'existe pas encore. */
 export const getTheme = unstable_cache(
@@ -229,8 +244,8 @@ export const getTheme = unstable_cache(
   { tags: [CONTENT_TAGS.theme] },
 );
 
-export const getSettings = unstable_cache(
-  async (): Promise<SettingsVM> => {
+const loadSettings = unstable_cache(
+  async (): Promise<WithTranslations<SettingsVM>> => {
     try {
       const s = await prisma.siteSettings.findUnique({
         where: { id: "singleton" },
@@ -248,6 +263,7 @@ export const getSettings = unstable_cache(
           s.publishedResume?.url ?? s.resumeExternalUrl ?? personalData.resume,
         sections:
           (s.sections as SettingsVM["sections"] | null) ?? DEFAULT_SECTIONS,
+        translations: s.translations,
       };
     } catch {
       return defaultSettings();
@@ -257,15 +273,15 @@ export const getSettings = unstable_cache(
   { tags: [CONTENT_TAGS.settings] },
 );
 
-export const getHero = unstable_cache(
-  async (): Promise<HeroVM> => {
+const loadHero = unstable_cache(
+  async (): Promise<WithTranslations<HeroVM>> => {
     try {
       const [hero, settings] = await Promise.all([
         prisma.hero.findUnique({
           where: { id: "singleton" },
           include: { heroImage: true },
         }),
-        getSettings(),
+        loadSettings(),
       ]);
       if (!hero) return defaultHero(settings.resumeUrl);
       return {
@@ -281,6 +297,7 @@ export const getHero = unstable_cache(
         ctaResumeLabel: hero.ctaResumeLabel,
         heroImage: hero.heroImage?.url ?? null,
         resumeUrl: settings.resumeUrl,
+        translations: hero.translations,
       };
     } catch {
       return defaultHero(personalData.resume);
@@ -290,8 +307,8 @@ export const getHero = unstable_cache(
   { tags: [CONTENT_TAGS.hero, CONTENT_TAGS.settings] },
 );
 
-export const getProfile = unstable_cache(
-  async (): Promise<ProfileVM> => {
+const loadProfile = unstable_cache(
+  async (): Promise<WithTranslations<ProfileVM>> => {
     try {
       const p = await prisma.profile.findUnique({
         where: { id: "singleton" },
@@ -304,6 +321,7 @@ export const getProfile = unstable_cache(
         description: p.description,
         image: p.image?.url ?? personalData.profile,
         name: personalData.name,
+        translations: p.translations,
       };
     } catch {
       return defaultProfile();
@@ -335,44 +353,31 @@ export const getSocialLinks = unstable_cache(
   { tags: [CONTENT_TAGS.socials] },
 );
 
-export const getSkillsGrouped = unstable_cache(
-  async (): Promise<GroupedSkills> => {
+const loadSkills = unstable_cache(
+  async (): Promise<SkillRow[]> => {
     try {
       const skills = await prisma.skill.findMany({
         where: { active: true },
         orderBy: [{ category: "asc" }, { order: "asc" }],
       });
-      if (!skills.length) return defaultSkillsGrouped();
-      const out: GroupedSkills = {
-        Frontend: [],
-        Backend: [],
-        Langages: [],
-        Database: [],
-        "Data & IA": [],
-        Mobile: [],
-        Tools: [],
-        DevOps: [],
-        "Soft skills": [],
-      };
-      for (const s of skills) {
-        const label = CATEGORY_LABEL[s.category];
-        out[label].push({
-          name: s.name,
-          iconKey: s.iconKey ?? s.name,
-          color: s.color,
-        });
-      }
-      return out;
+      if (!skills.length) return defaultSkills();
+      return skills.map((s) => ({
+        name: s.name,
+        iconKey: s.iconKey ?? s.name,
+        color: s.color,
+        category: s.category,
+        translations: s.translations,
+      }));
     } catch {
-      return defaultSkillsGrouped();
+      return defaultSkills();
     }
   },
   ["skills", CACHE_VERSION],
   { tags: [CONTENT_TAGS.skills] },
 );
 
-export const getExperiences = unstable_cache(
-  async (): Promise<ExperienceVM[]> => {
+const loadExperiences = unstable_cache(
+  async (): Promise<WithTranslations<ExperienceVM>[]> => {
     try {
       const rows = await prisma.experience.findMany({
         where: { active: true },
@@ -385,6 +390,7 @@ export const getExperiences = unstable_cache(
         company: r.company,
         duration: r.duration,
         details: r.details,
+        translations: r.translations,
       }));
     } catch {
       return defaultExperiences();
@@ -394,8 +400,8 @@ export const getExperiences = unstable_cache(
   { tags: [CONTENT_TAGS.experiences] },
 );
 
-export const getEducations = unstable_cache(
-  async (): Promise<EducationVM[]> => {
+const loadEducations = unstable_cache(
+  async (): Promise<WithTranslations<EducationVM>[]> => {
     try {
       const rows = await prisma.education.findMany({
         where: { active: true },
@@ -407,6 +413,7 @@ export const getEducations = unstable_cache(
         title: r.title,
         institution: r.institution,
         duration: r.duration,
+        translations: r.translations,
       }));
     } catch {
       return defaultEducations();
@@ -428,11 +435,12 @@ type ProjectWithImages = {
   date: string | null;
   highlights: string[];
   challenges: string[];
+  translations: unknown;
   primaryImage: { url: string } | null;
   images: { media: { url: string } }[];
 };
 
-function projectToVM(p: ProjectWithImages): ProjectVM {
+function projectToRow(p: ProjectWithImages): WithTranslations<ProjectVM> {
   const urls = p.images.map((i) => i.media.url);
   const primaryUrl = p.primaryImage?.url;
   const images = primaryUrl
@@ -440,7 +448,7 @@ function projectToVM(p: ProjectWithImages): ProjectVM {
     : urls;
   return {
     id: p.legacyId ?? 0,
-    name: p.name,
+    name: p.name.trim(),
     description: p.description,
     tools: p.tools,
     role: p.role,
@@ -451,6 +459,7 @@ function projectToVM(p: ProjectWithImages): ProjectVM {
     featured: p.featured,
     highlights: p.highlights,
     challenges: p.challenges,
+    translations: p.translations,
   };
 }
 
@@ -459,8 +468,8 @@ const PROJECT_INCLUDE = {
   images: { include: { media: true }, orderBy: { order: "asc" as const } },
 };
 
-export const getProjects = unstable_cache(
-  async (): Promise<ProjectVM[]> => {
+const loadProjects = unstable_cache(
+  async (): Promise<WithTranslations<ProjectVM>[]> => {
     try {
       const rows = await prisma.project.findMany({
         where: { active: true },
@@ -468,7 +477,7 @@ export const getProjects = unstable_cache(
         include: PROJECT_INCLUDE,
       });
       if (!rows.length) return defaultProjects();
-      return rows.map(projectToVM);
+      return rows.map(projectToRow);
     } catch {
       return defaultProjects();
     }
@@ -477,23 +486,15 @@ export const getProjects = unstable_cache(
   { tags: [CONTENT_TAGS.projects] },
 );
 
-/** Projets « mis en avant » d'abord (ordre admin), complétés par les suivants. */
-export async function getFeaturedProjects(limit = 3): Promise<ProjectVM[]> {
-  const all = await getProjects();
-  const featured = all.filter((p) => p.featured);
-  const rest = all.filter((p) => !p.featured);
-  return [...featured, ...rest].slice(0, limit);
-}
-
-export function getProjectByLegacyId(id: number): Promise<ProjectVM | null> {
+function loadProject(id: number) {
   return unstable_cache(
-    async (): Promise<ProjectVM | null> => {
+    async (): Promise<WithTranslations<ProjectVM> | null> => {
       try {
         const p = await prisma.project.findFirst({
           where: { legacyId: id, active: true },
           include: PROJECT_INCLUDE,
         });
-        return p ? projectToVM(p) : null;
+        return p ? projectToRow(p) : null;
       } catch {
         return defaultProjects().find((x) => x.id === id) ?? null;
       }
@@ -501,4 +502,75 @@ export function getProjectByLegacyId(id: number): Promise<ProjectVM | null> {
     ["project", String(id), CACHE_VERSION],
     { tags: [CONTENT_TAGS.projects, `project:${id}`] },
   )();
+}
+
+// ------------------------------------------------------------------
+// Lectures publiques, dans la langue demandée
+// ------------------------------------------------------------------
+export async function getSettings(locale: Locale = "en"): Promise<SettingsVM> {
+  return localize(await loadSettings(), locale, TRANSLATABLE.settings);
+}
+
+export async function getHero(locale: Locale = "en"): Promise<HeroVM> {
+  return localize(await loadHero(), locale, TRANSLATABLE.hero);
+}
+
+export async function getProfile(locale: Locale = "en"): Promise<ProfileVM> {
+  return localize(await loadProfile(), locale, TRANSLATABLE.profile);
+}
+
+export async function getSkillsGrouped(
+  locale: Locale = "en",
+): Promise<GroupedSkills> {
+  const out: GroupedSkills = {};
+  for (const row of await loadSkills()) {
+    const { category, ...skill } = row;
+    const vm = localize(skill, locale, TRANSLATABLE.skill);
+    (out[category] ??= []).push(vm);
+  }
+  // Ordre d'affichage stable, quel que soit l'ordre des catégories en base.
+  return Object.fromEntries(
+    SKILL_CATEGORIES.filter((c) => out[c]?.length).map((c) => [c, out[c]]),
+  );
+}
+
+export async function getExperiences(
+  locale: Locale = "en",
+): Promise<ExperienceVM[]> {
+  return (await loadExperiences()).map((r) =>
+    localize(r, locale, TRANSLATABLE.experience),
+  );
+}
+
+export async function getEducations(
+  locale: Locale = "en",
+): Promise<EducationVM[]> {
+  return (await loadEducations()).map((r) =>
+    localize(r, locale, TRANSLATABLE.education),
+  );
+}
+
+export async function getProjects(locale: Locale = "en"): Promise<ProjectVM[]> {
+  return (await loadProjects()).map((r) =>
+    localize(r, locale, TRANSLATABLE.project),
+  );
+}
+
+/** Projets « mis en avant » d'abord (ordre admin), complétés par les suivants. */
+export async function getFeaturedProjects(
+  locale: Locale = "en",
+  limit = 3,
+): Promise<ProjectVM[]> {
+  const all = await getProjects(locale);
+  const featured = all.filter((p) => p.featured);
+  const rest = all.filter((p) => !p.featured);
+  return [...featured, ...rest].slice(0, limit);
+}
+
+export async function getProjectByLegacyId(
+  id: number,
+  locale: Locale = "en",
+): Promise<ProjectVM | null> {
+  const row = await loadProject(id);
+  return row ? localize(row, locale, TRANSLATABLE.project) : null;
 }

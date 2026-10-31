@@ -1,10 +1,11 @@
 import Image from "next/image";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ArrowRight, Download } from "lucide-react";
 import type { HeroVM, SocialVM } from "@/lib/content-types";
 import { isOptimizableImageUrl } from "@/lib/media-format";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
+import { Link } from "@/i18n/navigation";
 import { CodeCard } from "./code-card";
 import { RotatingWords } from "./rotating-words";
 import { SocialLinks } from "./social-links";
@@ -16,6 +17,8 @@ export default function Hero({
   hero: HeroVM;
   socials: SocialVM[];
 }) {
+  const t = useTranslations("Hero");
+  const prefix = t("prefix");
   const words =
     hero.alternateWords.length > 0 ? hero.alternateWords : [hero.designation];
 
@@ -46,8 +49,13 @@ export default function Hero({
               )}
             </h1>
             <p className="text-lg text-foreground sm:text-xl">
-              <span className="font-mono font-medium">{hero.name}</span>
-              <span className="text-muted-foreground"> — Software </span>
+              <bdi dir="ltr" className="font-mono font-medium">
+                {hero.name}
+              </bdi>
+              <span className="text-muted-foreground">
+                {" — "}
+                {prefix && `${prefix} `}
+              </span>
               <RotatingWords
                 words={words}
                 className="font-medium text-primary"
@@ -64,7 +72,7 @@ export default function Hero({
             <Button asChild size="lg">
               <Link href={hero.ctaPrimaryHref}>
                 {hero.ctaPrimaryLabel}
-                <ArrowRight />
+                <ArrowRight className="rtl:rotate-180" />
               </Link>
             </Button>
             {hero.resumeUrl && (

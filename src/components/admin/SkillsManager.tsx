@@ -29,9 +29,20 @@ export interface SkillRow {
   color: string;
   order: number;
   active: boolean;
+  translations?: unknown;
 }
 
-type FormState = Omit<SkillRow, "id" | "order">;
+/** Nom traduit (fr / es / ar) ; vide = nom anglais affiché. */
+type NameTranslations = { fr: string; es: string; ar: string };
+const TR_LANGS = [
+  { code: "fr", label: "Nom en français" },
+  { code: "es", label: "Nom en espagnol" },
+  { code: "ar", label: "Nom en arabe" },
+] as const;
+
+type FormState = Omit<SkillRow, "id" | "order" | "translations"> & {
+  tr: NameTranslations;
+};
 
 const empty = (category: SkillCategoryKey = "FRONTEND"): FormState => ({
   name: "",
@@ -39,7 +50,28 @@ const empty = (category: SkillCategoryKey = "FRONTEND"): FormState => ({
   iconKey: "",
   color: "",
   active: true,
+  tr: { fr: "", es: "", ar: "" },
 });
+
+function namesFrom(translations: unknown): NameTranslations {
+  const pick = (code: string) => {
+    const t = (translations as Record<string, { name?: unknown }> | null)?.[
+      code
+    ];
+    return typeof t?.name === "string" ? t.name : "";
+  };
+  return { fr: pick("fr"), es: pick("es"), ar: pick("ar") };
+}
+
+function toPayload(form: FormState) {
+  const { tr, ...fields } = form;
+  return {
+    ...fields,
+    translations: Object.fromEntries(
+      TR_LANGS.map(({ code }) => [code, { name: tr[code] }]),
+    ),
+  };
+}
 
 function SkillIcon({
   iconKey,
@@ -88,6 +120,7 @@ export default function SkillsManager({ initial }: { initial: SkillRow[] }) {
       iconKey: row.iconKey,
       color: row.color,
       active: row.active,
+      tr: namesFrom(row.translations),
     });
     document
       .getElementById("skill-form")
@@ -102,7 +135,10 @@ export default function SkillsManager({ initial }: { initial: SkillRow[] }) {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     const res = await execute(
-      () => (editingId ? updateSkill(editingId, form) : createSkill(form)),
+      () =>
+        editingId
+          ? updateSkill(editingId, toPayload(form))
+          : createSkill(toPayload(form)),
       {
         success: editingId ? "Compétence mise à jour." : "Compétence ajoutée.",
       },
@@ -199,6 +235,31 @@ export default function SkillsManager({ initial }: { initial: SkillRow[] }) {
                 onChange={(color) => setForm({ ...form, color })}
               />
             </Field>
+          </div>
+          <div className="grid gap-5 rounded-xl border bg-muted/30 p-4 sm:grid-cols-3">
+            {TR_LANGS.map(({ code, label }) => (
+              <Field
+                key={code}
+                label={label}
+                htmlFor={`s-tr-${code}`}
+                hint={code === "fr" ? "Vide = nom anglais." : undefined}
+              >
+                <Input
+                  id={`s-tr-${code}`}
+                  dir={code === "ar" ? "rtl" : "ltr"}
+                  lang={code}
+                  value={form.tr[code]}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      tr: { ...form.tr, [code]: e.target.value },
+                    })
+                  }
+                  placeholder={form.name}
+                  maxLength={80}
+                />
+              </Field>
+            ))}
           </div>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Checkbox

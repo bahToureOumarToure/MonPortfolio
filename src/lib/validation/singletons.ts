@@ -22,6 +22,7 @@ export const heroInput = z.object({
   ctaPrimaryHref: z.string().trim().max(200).default("/#contact"),
   ctaResumeLabel: z.string().trim().max(60).default("Get Resume"),
   heroImage: optionalImage,
+  translations: z.unknown().optional(),
 });
 export type HeroInput = z.infer<typeof heroInput>;
 
@@ -34,6 +35,7 @@ export const profileInput = z.object({
     .min(1, "La description est requise.")
     .max(4000),
   image: optionalImage,
+  translations: z.unknown().optional(),
 });
 export type ProfileInput = z.infer<typeof profileInput>;
 
@@ -57,5 +59,6 @@ export const settingsInput = z.object({
     .trim()
     .refine((v) => v === "" || /^https?:\/\//.test(v), "URL invalide.")
     .default(""),
+  translations: z.unknown().optional(),
 });
 export type SettingsInput = z.infer<typeof settingsInput>;
