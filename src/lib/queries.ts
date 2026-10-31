@@ -32,7 +32,7 @@ import { DEFAULT_THEME, sanitizeTheme, type ThemeVM } from "./theme";
  * des données (sinon l'ancien contenu resterait servi jusqu'à la prochaine
  * modification dans l'admin).
  */
-const CACHE_VERSION = "2026-10-28";
+const CACHE_VERSION = "2026-10-31";
 
 export const CONTENT_TAGS = {
   hero: "hero",

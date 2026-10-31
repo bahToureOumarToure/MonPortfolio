@@ -78,6 +78,11 @@ test.describe("Site public", () => {
       "Docker",
       "Kubernetes",
       "LangChain",
+      "Claude Code",
+      "Antigravity",
+      "RAG",
+      "Agentic AI",
+      "Multi-Agent AI",
       "Écoute active",
       "Apprentissage continu",
     ]) {
