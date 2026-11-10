@@ -10,9 +10,14 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Un nouveau push remplace l'exécution en cours de la même branche ou PR, sauf
+# sur main : chaque commit mis en production garde son propre verdict.
+# L'événement fait partie du groupe : l'exécution « pull_request » d'une PR est
+# parfois créée après son merge, avec main pour référence, et annulait alors
+# l'exécution de main.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
