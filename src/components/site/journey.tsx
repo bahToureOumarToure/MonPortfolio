@@ -1,6 +1,10 @@
 import { useTranslations } from "next-intl";
-import { Briefcase, GraduationCap } from "lucide-react";
-import type { EducationVM, ExperienceVM } from "@/lib/content-types";
+import { Briefcase, GraduationCap, HeartHandshake } from "lucide-react";
+import type {
+  ActivityVM,
+  EducationVM,
+  ExperienceVM,
+} from "@/lib/content-types";
 import { Reveal } from "./reveal";
 import { Section, SectionHeader } from "./section";
 
@@ -56,15 +60,37 @@ function TimelineItem({
   );
 }
 
+function Details({ items }: { items: string[] }) {
+  if (items.length === 0) return null;
+  return (
+    <ul className="mt-4 flex flex-col gap-2 text-sm leading-relaxed text-muted-foreground">
+      {items.map((d, i) => (
+        <li key={i} className="flex gap-2.5">
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary" />
+          {d}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function Journey({
   experiences,
   educations,
+  activities,
 }: {
   experiences: ExperienceVM[];
   educations: EducationVM[];
+  activities: ActivityVM[];
 }) {
   const t = useTranslations("Journey");
-  if (experiences.length === 0 && educations.length === 0) return null;
+  if (
+    experiences.length === 0 &&
+    educations.length === 0 &&
+    activities.length === 0
+  ) {
+    return null;
+  }
 
   return (
     <Section id="experience">
@@ -88,16 +114,7 @@ export default function Journey({
                   subtitle={exp.company}
                   period={exp.duration}
                 >
-                  {exp.details.length > 0 && (
-                    <ul className="mt-4 flex flex-col gap-2 text-sm leading-relaxed text-muted-foreground">
-                      {exp.details.map((d, i) => (
-                        <li key={i} className="flex gap-2.5">
-                          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary" />
-                          {d}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <Details items={exp.details} />
                 </TimelineItem>
               ))}
             </Timeline>
@@ -123,6 +140,47 @@ export default function Journey({
           </div>
         )}
       </div>
+
+      {activities.length > 0 && (
+        <div id="activities" className="mt-14 scroll-mt-24">
+          <h3 className="mb-6 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            <HeartHandshake className="h-4 w-4" /> {t("activities")}
+          </h3>
+          <ul className="grid gap-6 md:grid-cols-2">
+            {activities.map((activity) => (
+              <li key={activity.id}>
+                <Reveal className="h-full">
+                  <article className="flex h-full gap-4 rounded-xl border bg-card p-5 shadow-sm sm:p-6">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <HeartHandshake className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                        <div>
+                          <h4 className="text-base font-semibold text-foreground sm:text-lg">
+                            {activity.title}
+                          </h4>
+                          {activity.organization && (
+                            <p className="mt-0.5 text-sm font-medium text-primary">
+                              {activity.organization}
+                            </p>
+                          )}
+                        </div>
+                        {activity.duration && (
+                          <span className="shrink-0 font-mono text-xs text-muted-foreground sm:pt-1">
+                            {activity.duration}
+                          </span>
+                        )}
+                      </div>
+                      <Details items={activity.details} />
+                    </div>
+                  </article>
+                </Reveal>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </Section>
   );
 }

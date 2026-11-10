@@ -13,6 +13,7 @@ import {
   getProfile,
   getExperiences,
   getEducations,
+  getActivities,
   getSkillsGrouped,
   getFeaturedProjects,
   getSettings,
@@ -37,6 +38,7 @@ export default async function Home({ params }: Props) {
     profile,
     experiences,
     educations,
+    activities,
     grouped,
     featured,
     settings,
@@ -46,6 +48,7 @@ export default async function Home({ params }: Props) {
     getProfile(locale),
     getExperiences(locale),
     getEducations(locale),
+    getActivities(locale),
     getSkillsGrouped(locale),
     getFeaturedProjects(locale, 3),
     getSettings(locale),
@@ -55,7 +58,11 @@ export default async function Home({ params }: Props) {
     <>
       <Hero hero={hero} socials={socials} />
       <About profile={profile} settings={settings} />
-      <Journey experiences={experiences} educations={educations} />
+      <Journey
+        experiences={experiences}
+        educations={educations}
+        activities={activities}
+      />
       <Skills grouped={grouped} />
       <ProjectsSection projects={featured} />
       <Contact settings={settings} socials={socials} />

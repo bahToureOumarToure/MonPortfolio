@@ -57,13 +57,15 @@ export default function TimelineManager({
   initial: TimelineRow[];
   labels: {
     noun: string;
+    /** Accord de « ajoutée » / « une » : féminin par défaut. */
+    masculine?: boolean;
     subtitle: string;
     subtitlePlaceholder: string;
     titlePlaceholder: string;
   };
   withDetails: boolean;
   /** Nom du champ « sous-titre » en base (entreprise ou établissement). */
-  subtitleKey: "company" | "institution";
+  subtitleKey: "company" | "institution" | "organization";
   actions: {
     create: (input: unknown) => Promise<ActionResult>;
     update: (id: string, input: unknown) => Promise<ActionResult>;
@@ -132,7 +134,7 @@ export default function TimelineManager({
       {
         success: editingId
           ? "Modifications enregistrées."
-          : `${labels.noun} ajoutée.`,
+          : `${labels.noun} ${labels.masculine ? "ajouté" : "ajoutée"}.`,
       },
     );
     if (res.ok) reset();
@@ -149,7 +151,9 @@ export default function TimelineManager({
     <div className="flex flex-col gap-6">
       <Panel
         title={
-          editingId ? "Modifier" : `Ajouter une ${labels.noun.toLowerCase()}`
+          editingId
+            ? "Modifier"
+            : `Ajouter ${labels.masculine ? "un" : "une"} ${labels.noun.toLowerCase()}`
         }
         actions={
           editingId && (

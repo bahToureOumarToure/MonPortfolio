@@ -18,6 +18,7 @@ import type {
   ProjectVM,
   ExperienceVM,
   EducationVM,
+  ActivityVM,
 } from "./content-types";
 import { SKILL_CATEGORIES, type SkillCategoryKey } from "./skill-categories";
 import { TRANSLATABLE, translate } from "./translate";
@@ -51,6 +52,7 @@ export const CONTENT_TAGS = {
   projects: "projects",
   experiences: "experiences",
   educations: "educations",
+  activities: "activities",
   theme: "theme",
 } as const;
 
@@ -423,6 +425,31 @@ const loadEducations = unstable_cache(
   { tags: [CONTENT_TAGS.educations] },
 );
 
+// Pas de contenu par défaut : sans activité saisie dans l'admin (ou si la
+// table n'existe pas encore), la rubrique n'apparaît simplement pas.
+const loadActivities = unstable_cache(
+  async (): Promise<WithTranslations<ActivityVM>[]> => {
+    try {
+      const rows = await prisma.activity.findMany({
+        where: { active: true },
+        orderBy: { order: "asc" },
+      });
+      return rows.map((r) => ({
+        id: r.id,
+        title: r.title,
+        organization: r.organization,
+        duration: r.duration,
+        details: r.details,
+        translations: r.translations,
+      }));
+    } catch {
+      return [];
+    }
+  },
+  ["activities", CACHE_VERSION],
+  { tags: [CONTENT_TAGS.activities] },
+);
+
 type ProjectWithImages = {
   legacyId: number | null;
   featured: boolean;
@@ -547,6 +574,14 @@ export async function getEducations(
 ): Promise<EducationVM[]> {
   return (await loadEducations()).map((r) =>
     localize(r, locale, TRANSLATABLE.education),
+  );
+}
+
+export async function getActivities(
+  locale: Locale = "en",
+): Promise<ActivityVM[]> {
+  return (await loadActivities()).map((r) =>
+    localize(r, locale, TRANSLATABLE.activity),
   );
 }
 

@@ -6,6 +6,7 @@ import {
   Database,
   FolderGit2,
   GraduationCap,
+  HeartHandshake,
   Images,
   Link2,
   Palette,
@@ -58,6 +59,12 @@ const SHORTCUTS = [
     label: "Formation",
     desc: "Diplômes et écoles",
     icon: GraduationCap,
+  },
+  {
+    href: "/admin/activities",
+    label: "Activités",
+    desc: "Bénévolat, associations, clubs",
+    icon: HeartHandshake,
   },
   {
     href: "/admin/socials",
@@ -115,6 +122,7 @@ const ENTITIES: Record<string, string> = {
   SocialLink: "lien social",
   Experience: "expérience",
   Education: "formation",
+  Activity: "activité",
   Media: "média",
   Hero: "hero",
   Profile: "profil",

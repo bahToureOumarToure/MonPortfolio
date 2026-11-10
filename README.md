@@ -23,7 +23,8 @@ compétences, médias, CV… et l'apparence du site).
 
 ## Fonctionnalités
 
-**Site public** — accueil (hero, à propos, parcours, compétences, projets, contact),
+**Site public** — accueil (hero, à propos, parcours avec expérience, formation et
+activités extra-universitaires, compétences, projets, contact),
 liste des projets filtrable par technologie, page détail par projet, 404, SEO
 (métadonnées, JSON-LD, `robots.txt`, `sitemap.xml`), responsive et accessible
 (navigation clavier, lecteurs d'écran, `prefers-reduced-motion`).
@@ -36,7 +37,7 @@ l'admin, onglets Français / Español / العربية sous chaque formulaire (u
 vide affiche le texte anglais).
 
 **Admin (`/admin`)** — tableau de bord, Profil & Hero, Projets (ordre, mise en avant,
-visibilité), Compétences, Expérience, Formation, Liens sociaux, Médias, Apparence,
+visibilité), Compétences, Expérience, Formation, Activités, Liens sociaux, Médias, Apparence,
 Paramètres & CV, Sécurité. Chaque modification est en ligne immédiatement.
 
 **Apparence** — mode **Clair (par défaut)** / Sombre / Automatique, couleur d'accent
