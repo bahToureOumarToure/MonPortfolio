@@ -130,10 +130,9 @@ test.describe("Admin", () => {
     test.skip(!!process.env.BLOB_READ_WRITE_TOKEN, "stockage réel configuré");
     await login(page);
     await page.goto("/admin/media");
+    // Sans store Vercel Blob, les fichiers vont dans le stockage intégré.
     await expect(
-      page.getByText(
-        /Aucun stockage de fichiers n'est relié au site : les uploads/,
-      ),
+      page.getByText("Stockage des fichiers opérationnel (intégré au site)"),
     ).toBeVisible();
     await page.getByRole("button", { name: /Ajouter par lien/ }).click();
     await page.locator("#img-url").fill("http://exemple.com/image.png");
@@ -144,8 +143,9 @@ test.describe("Admin", () => {
     await expect(page.getByText(/Lien invalide/)).toBeVisible();
   });
 
-  test("médias : message clair si le stockage refuse l'envoi", async ({
+  test("médias : upload d'une image sans stockage configuré, puis suppression", async ({
     page,
+    request,
   }) => {
     test.skip(!!process.env.BLOB_READ_WRITE_TOKEN, "stockage réel configuré");
     await login(page);
@@ -155,15 +155,113 @@ test.describe("Admin", () => {
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
       "base64",
     );
+    const name = `e2e-${Date.now()}.png`;
     await page.locator('input[type="file"]').setInputFiles({
-      name: "pixel.png",
+      name,
       mimeType: "image/png",
       buffer: png,
     });
-    await expect(
-      page.getByText(
-        /Aucun stockage de fichiers n'est relié au site\. Dans Vercel/,
-      ),
-    ).toBeVisible();
+
+    // Le fichier apparaît dans la médiathèque, servi par le site lui-même.
+    const item = page.locator("li", { hasText: name });
+    await expect(item).toBeVisible();
+    const src = await item.locator("img").getAttribute("src");
+    const url = decodeURIComponent(src ?? "").match(
+      /\/media\/[^&"]+\.png/,
+    )?.[0];
+    expect(url, "URL du fichier envoyé").toBeTruthy();
+    const served = await request.get(url!);
+    expect(served.status()).toBe(200);
+    expect(served.headers()["content-type"]).toBe("image/png");
+    expect((await served.body()).equals(png)).toBe(true);
+
+    // Suppression : le fichier n'est plus servi.
+    page.once("dialog", (d) => d.accept());
+    await item.getByRole("button", { name: `Supprimer ${name}` }).click();
+    await expect(item).toHaveCount(0);
+    expect((await request.get(url!)).status()).toBe(404);
+  });
+
+  test("médias : si l'upload direct vers Vercel Blob échoue, le fichier passe quand même", async ({
+    page,
+  }) => {
+    test.skip(!!process.env.BLOB_READ_WRITE_TOKEN, "stockage réel configuré");
+    // Simule un store Blob relié par jeton mais qui refuse l'upload direct
+    // (ex. store privé) : le fichier doit basculer sur l'upload via le serveur.
+    await page.route("**/api/admin/media/status", (route) =>
+      route.fulfill({
+        json: {
+          mode: "client",
+          ok: true,
+          error: null,
+          blobError: null,
+          serverMaxBytes: 4 * 1024 * 1024,
+        },
+      }),
+    );
+    let directAttempts = 0;
+    await page.route("**/api/admin/media/upload", (route) => {
+      directAttempts++;
+      return route.fulfill({
+        status: 400,
+        json: { error: "Vercel Blob: store privé, accès public refusé" },
+      });
+    });
+    await login(page);
+    await page.goto("/admin/media");
+    const png = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      "base64",
+    );
+    const name = `e2e-repli-${Date.now()}.png`;
+    await page.locator('input[type="file"]').setInputFiles({
+      name,
+      mimeType: "image/png",
+      buffer: png,
+    });
+    const item = page.locator("li", { hasText: name });
+    await expect(item).toBeVisible();
+    expect(directAttempts).toBeGreaterThan(0);
+
+    page.once("dialog", (d) => d.accept());
+    await item.getByRole("button", { name: `Supprimer ${name}` }).click();
+    await expect(item).toHaveCount(0);
+  });
+
+  test("médias : un CV en PDF est publié sur le site", async ({
+    page,
+    browser,
+    request,
+  }) => {
+    test.skip(!!process.env.BLOB_READ_WRITE_TOKEN, "stockage réel configuré");
+    await login(page);
+    await page.goto("/admin/settings");
+    const pdf = Buffer.from(
+      "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Count 0/Kids[]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n",
+    );
+    await page.locator('input[type="file"]').setInputFiles({
+      name: "cv-e2e.pdf",
+      mimeType: "application/pdf",
+      buffer: pdf,
+    });
+    await expect(page.getByText("CV publié sur le site.")).toBeVisible();
+
+    // Le bouton CV du site pointe vers le fichier envoyé.
+    const visitor = await browser.newPage();
+    await visitor.goto("/");
+    const href = await visitor
+      .getByRole("link", { name: /Resume/ })
+      .first()
+      .getAttribute("href");
+    await visitor.close();
+    expect(href).toMatch(/^\/media\/.+\.pdf$/);
+    const served = await request.get(href!);
+    expect(served.status()).toBe(200);
+    expect(served.headers()["content-type"]).toBe("application/pdf");
+
+    // Retour à l'état initial (lien de secours).
+    page.once("dialog", (d) => d.accept());
+    await page.getByRole("button", { name: /Retirer/ }).click();
+    await expect(page.getByText("CV retiré.")).toBeVisible();
   });
 });

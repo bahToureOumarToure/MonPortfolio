@@ -33,8 +33,14 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / MB).toFixed(1).replace(".", ",")} Mo`;
 }
 
-const NOT_CONFIGURED =
-  "Aucun stockage de fichiers n'est relié au site. Dans Vercel : Storage › Blob › relier un store au projet, puis redéployer. En attendant, ajoute tes images « par lien ».";
+const STORAGE_DOWN =
+  "Le stockage des fichiers est injoignable pour le moment. Réessaie dans un instant.";
+
+/**
+ * Passe à true quand l'upload direct vers Vercel Blob a échoué une fois sur
+ * cette page : les fichiers suivants passent tout de suite par le serveur.
+ */
+let directBroken = false;
 
 let statusPromise: Promise<StorageStatus> | null = null;
 
@@ -134,12 +140,16 @@ export async function optimizeImage(file: File): Promise<File> {
   return new File([blob], name, { type: blob.type, lastModified: Date.now() });
 }
 
-/** Upload via la route serveur (store relié par OIDC), avec progression. */
+/**
+ * Upload via le serveur, avec progression. Le serveur choisit le stockage
+ * (Vercel Blob ou stockage intégré au site) et crée lui-même le média.
+ */
 function uploadThroughServer(
   file: File,
   kind: UploadKind,
+  dims: { width?: number; height?: number },
   onProgress?: (p: UploadProgress) => void,
-): Promise<{ url: string; pathname: string }> {
+): Promise<MediaDTO> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/admin/media/put");
@@ -154,21 +164,16 @@ function uploadThroughServer(
       }
     };
     xhr.onload = () => {
-      let data: { url?: string; pathname?: string; error?: string } = {};
+      let data: { media?: MediaDTO; error?: string } = {};
       try {
         data = JSON.parse(xhr.responseText);
       } catch {
         /* réponse non JSON */
       }
-      if (xhr.status >= 200 && xhr.status < 300 && data.url) {
-        resolve({ url: data.url, pathname: data.pathname ?? "" });
+      if (xhr.status >= 200 && xhr.status < 300 && data.media) {
+        resolve(data.media);
       } else if (xhr.status === 413) {
-        reject(
-          new Error(
-            data.error ??
-              "Fichier trop lourd pour ce mode de stockage (4 Mo maximum).",
-          ),
-        );
+        reject(new Error(data.error ?? "Fichier trop lourd (4 Mo maximum)."));
       } else {
         reject(
           new Error(
@@ -185,6 +190,8 @@ function uploadThroughServer(
     const form = new FormData();
     form.append("file", file);
     form.append("kind", kind);
+    if (dims.width) form.append("width", String(dims.width));
+    if (dims.height) form.append("height", String(dims.height));
     xhr.send(form);
   });
 }
@@ -246,9 +253,11 @@ async function uploadDirect(
 }
 
 /**
- * Upload d'un fichier vers Vercel Blob puis enregistrement de la ligne Media.
- * Choisit automatiquement le mode disponible (direct ou via le serveur) et
- * renvoie toujours un message d'erreur compréhensible.
+ * Envoie un fichier et crée son média. Avec un store Vercel Blob relié par
+ * jeton, l'upload part directement du navigateur (gros fichiers) ; dans tous
+ * les autres cas — et si l'upload direct échoue — il passe par le serveur, qui
+ * enregistre le fichier dans Vercel Blob ou, à défaut, dans le stockage
+ * intégré au site. Renvoie toujours un message d'erreur compréhensible.
  */
 export async function uploadFile(
   original: File,
@@ -259,37 +268,41 @@ export async function uploadFile(
   if (invalid) throw new Error(invalid);
 
   const status = await getStorageStatus();
-  if (status.mode === "none") throw new Error(NOT_CONFIGURED);
+  if (!status.ok) throw new Error(STORAGE_DOWN);
 
   const file = kind === "IMAGE" ? await optimizeImage(original) : original;
   const rule = UPLOAD_RULES[kind];
-  const limit =
-    status.mode === "server"
-      ? Math.min(rule.maxBytes, status.serverMaxBytes)
-      : rule.maxBytes;
-  if (file.size > limit) {
-    throw new Error(
+  const serverLimit = Math.min(rule.maxBytes, status.serverMaxBytes);
+  const tooBig = (limit: number) =>
+    new Error(
       `« ${original.name} » est trop lourd (${formatBytes(file.size)}, max ${formatBytes(limit)}).`,
     );
-  }
   const dims = await readDimensions(file);
 
-  const stored =
-    status.mode === "server"
-      ? await uploadThroughServer(file, kind, onProgress)
-      : await uploadDirect(file, kind, onProgress);
+  if (status.mode === "client" && !directBroken) {
+    if (file.size > rule.maxBytes) throw tooBig(rule.maxBytes);
+    try {
+      const stored = await uploadDirect(file, kind, onProgress);
+      const res = await registerMedia({
+        url: stored.url,
+        pathname: stored.pathname,
+        filename: file.name,
+        mimeType:
+          mimeOf(file) || (kind === "DOCUMENT" ? "application/pdf" : "image/*"),
+        size: file.size,
+        width: dims.width,
+        height: dims.height,
+        kind,
+      });
+      if (!res.ok) throw new Error(res.error);
+      return res.data;
+    } catch (error) {
+      // Trop lourd pour passer par le serveur : on remonte l'erreur d'origine.
+      if (file.size > serverLimit) throw error;
+      directBroken = true;
+    }
+  }
 
-  const res = await registerMedia({
-    url: stored.url,
-    pathname: stored.pathname,
-    filename: file.name,
-    mimeType:
-      mimeOf(file) || (kind === "DOCUMENT" ? "application/pdf" : "image/*"),
-    size: file.size,
-    width: dims.width,
-    height: dims.height,
-    kind,
-  });
-  if (!res.ok) throw new Error(res.error);
-  return res.data;
+  if (file.size > serverLimit) throw tooBig(serverLimit);
+  return uploadThroughServer(file, kind, dims, onProgress);
 }

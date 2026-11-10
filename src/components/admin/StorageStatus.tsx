@@ -10,7 +10,7 @@ import { getStorageStatus } from "@/lib/upload-client";
 import type { StorageStatus as Status } from "@/lib/upload-rules";
 import { Button } from "@/components/ui/button";
 
-/** Diagnostic du stockage des fichiers (Vercel Blob), avec la marche à suivre. */
+/** Diagnostic du stockage des fichiers : où vont les uploads, et s'ils passent. */
 export default function StorageStatus() {
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -41,17 +41,45 @@ export default function StorageStatus() {
     );
   }
 
-  if (status?.ok) {
+  if (status?.ok && status.mode !== "database") {
     return (
       <p className="flex items-center gap-2 text-sm text-success">
         <CheckCircle2 className="h-4 w-4" />
-        Stockage des fichiers opérationnel
+        Stockage des fichiers opérationnel (Vercel Blob)
         {status.mode === "server" && (
           <span className="text-muted-foreground">
-            (fichiers de 4 Mo maximum)
+            — fichiers de 4 Mo maximum
           </span>
         )}
       </p>
+    );
+  }
+
+  if (status?.ok) {
+    return (
+      <div className="flex flex-col gap-1.5 text-sm">
+        <p className="flex items-center gap-2 text-success">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          Stockage des fichiers opérationnel (intégré au site)
+          <span className="text-muted-foreground">
+            — fichiers de 4 Mo maximum
+          </span>
+        </p>
+        {status.blobError ? (
+          <p className="text-xs text-muted-foreground">
+            Un store Vercel Blob est relié au projet mais ne répond pas (
+            <span className="font-mono">{status.blobError}</span>) : les
+            fichiers sont enregistrés dans la base de données du site en
+            attendant.
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Les fichiers sont enregistrés dans la base de données du site : rien
+            à configurer. Pour de plus gros fichiers, relie un store Blob public
+            au projet dans Vercel › Storage.
+          </p>
+        )}
+      </div>
     );
   }
 
@@ -63,36 +91,16 @@ export default function StorageStatus() {
       <p className="flex items-center gap-2 font-medium text-destructive">
         <CircleAlert className="h-4 w-4 shrink-0" />
         {error ??
-          (status?.mode === "none"
-            ? "Aucun stockage de fichiers n'est relié au site : les uploads ne peuvent pas fonctionner."
-            : "Le stockage de fichiers est relié mais inaccessible.")}
+          "Le stockage des fichiers est injoignable : la base de données du site ne répond pas."}
       </p>
       {status?.error && (
         <p className="font-mono text-xs text-muted-foreground">
           {status.error}
         </p>
       )}
-      {!error && (
-        <ol className="ml-5 list-decimal space-y-1 text-muted-foreground">
-          <li>
-            Sur vercel.com, ouvre le projet{" "}
-            <strong className="text-foreground">mon-portfolio</strong> › onglet{" "}
-            <strong className="text-foreground">Storage</strong>.
-          </li>
-          <li>
-            Crée (ou choisis) un store{" "}
-            <strong className="text-foreground">Blob</strong> en accès public et
-            relie-le au projet pour Production et Preview.
-          </li>
-          <li>
-            Redéploie le site (Deployments › … › Redeploy), puis clique sur «
-            Revérifier ».
-          </li>
-        </ol>
-      )}
       <p className="text-muted-foreground">
-        En attendant, tu peux ajouter tes images avec le bouton « Ajouter par
-        lien ».
+        Réessaie dans un instant. En attendant, tu peux ajouter tes images avec
+        le bouton « Ajouter par lien ».
       </p>
       <Button
         type="button"

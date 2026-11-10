@@ -5,9 +5,8 @@ import {
   mediaAltInput,
   registerMediaInput,
 } from "@/lib/validation/media";
-import { put } from "@vercel/blob";
-import { blobMode, deleteBlob, isBlobUrl } from "@/lib/blob";
-import { UPLOAD_RULES } from "@/lib/upload-rules";
+import { removeStoredFile, storeFile } from "@/lib/storage";
+import { SERVER_UPLOAD_MAX_BYTES, UPLOAD_RULES } from "@/lib/upload-rules";
 import {
   assertAdmin,
   audit,
@@ -18,7 +17,7 @@ import {
 import type { ActionResult } from "./result";
 import { toMediaDTO, type AssignTarget, type MediaDTO } from "@/lib/media-dto";
 
-/** Crée la ligne Media après un upload Blob réussi (appelée côté client). */
+/** Crée la ligne Media après un upload direct vers Vercel Blob (côté client). */
 export async function registerMedia(
   input: unknown,
 ): Promise<ActionResult<MediaDTO>> {
@@ -44,9 +43,10 @@ export async function registerMedia(
 }
 
 /**
- * Ajoute une image à partir d'un lien https. Si un stockage Blob est relié,
- * l'image est copiée dedans (lien durable et optimisé) ; sinon le lien est
- * conservé tel quel. Le lien doit pointer directement vers une image.
+ * Ajoute une image à partir d'un lien https. L'image est copiée dans le
+ * stockage du site (lien durable et optimisé) quand son format et sa taille le
+ * permettent ; sinon le lien est conservé tel quel. Le lien doit pointer
+ * directement vers une image.
  */
 export async function registerExternalImage(
   input: unknown,
@@ -86,25 +86,22 @@ export async function registerExternalImage(
     let pathname: string | null = null;
     let size = 0;
 
-    const canCopy =
-      blobMode() !== "none" &&
-      (UPLOAD_RULES.IMAGE.types as readonly string[]).includes(type);
+    const canCopy = (UPLOAD_RULES.IMAGE.types as readonly string[]).includes(
+      type,
+    );
     if (canCopy) {
-      const data = await res.arrayBuffer();
+      const data = new Uint8Array(await res.arrayBuffer());
       size = data.byteLength;
-      if (size <= UPLOAD_RULES.IMAGE.maxBytes) {
+      if (size > 0 && size <= SERVER_UPLOAD_MAX_BYTES) {
         try {
-          const blob = await put(
-            `images/${filename.replace(/[^\w.-]+/g, "-")}`,
+          const stored = await storeFile({
             data,
-            {
-              access: "public",
-              addRandomSuffix: true,
-              contentType: type,
-            },
-          );
-          storedUrl = blob.url;
-          pathname = blob.pathname;
+            mimeType: type,
+            filename,
+            kind: "IMAGE",
+          });
+          storedUrl = stored.url;
+          pathname = stored.pathname;
         } catch {
           /* stockage indisponible : on garde le lien d'origine */
         }
@@ -186,10 +183,7 @@ export async function deleteMedia(id: string): Promise<ActionResult> {
       prisma.media.delete({ where: { id } }),
     ]);
 
-    // Les fichiers /public historiques ne sont pas sur Blob : rien à supprimer.
-    if (media.pathname || isBlobUrl(media.url)) {
-      await deleteBlob(media.pathname ?? media.url);
-    }
+    await removeStoredFile(media);
     await audit("media.delete", "Media", id);
     await revalidateContent(
       ["projects", "hero", "profile", "settings"],

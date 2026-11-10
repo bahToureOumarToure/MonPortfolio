@@ -23,7 +23,7 @@ enum MediaKind {
 model Media {
   id        String    @id @default(cuid())
   url       String // URL publique (Blob) ou chemin /public au seed
-  pathname  String? // pathname Blob (pour suppression)
+  pathname  String? // pathname Blob, ou "db:<id>" (stockage de secours en base)
   filename  String
   mimeType  String
   size      Int       @default(0)
@@ -39,6 +39,17 @@ model Media {
   projectImages  ProjectImage[]
   projectCovers  Project[]      @relation("ProjectPrimaryImage")
   resumeSettings SiteSettings[] @relation("PublishedResume")
+}
+
+// Contenu binaire des fichiers envoyés quand aucun stockage Vercel Blob n'est
+// utilisable : stockage de secours dans la base, servi par /media/<id>/<nom>.
+// Media.pathname vaut alors "db:<id>". Table créée par prisma/sql/010.
+model MediaBlob {
+  id        String   @id @default(cuid())
+  data      Bytes
+  mimeType  String
+  size      Int
+  createdAt DateTime @default(now())
 }
 
 // =====================================================================

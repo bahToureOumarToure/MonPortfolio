@@ -22,13 +22,22 @@ export type UploadKind = keyof typeof UPLOAD_RULES;
 /** Limite des fonctions Vercel (corps de requête ≈ 4,5 Mo) pour l'upload via le serveur. */
 export const SERVER_UPLOAD_MAX_BYTES = 4 * MB;
 
-/** Mode d'upload disponible côté serveur. */
-export type StorageMode = "client" | "server" | "none";
+/**
+ * Où vont les fichiers envoyés :
+ * - "client"   : Vercel Blob, upload direct depuis le navigateur ;
+ * - "server"   : Vercel Blob, upload via le serveur (≤ 4 Mo) ;
+ * - "database" : stockage intégré au site (base de données, ≤ 4 Mo), utilisé
+ *   quand aucun store Vercel Blob n'est relié ou qu'il ne répond pas.
+ */
+export type StorageMode = "client" | "server" | "database";
 
 export interface StorageStatus {
   mode: StorageMode;
   ok: boolean;
+  /** Erreur du stockage utilisé (aucun upload possible si non nul). */
   error: string | null;
+  /** Vercel Blob est relié mais inutilisable : raison technique. */
+  blobError: string | null;
   serverMaxBytes: number;
 }
 

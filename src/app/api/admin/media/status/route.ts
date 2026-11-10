@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
-import { blobStatus } from "@/lib/blob";
+import { storageStatus } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export async function GET(): Promise<NextResponse> {
       { status: 401 },
     );
   }
-  return NextResponse.json(await blobStatus(), {
+  return NextResponse.json(await storageStatus(), {
     headers: { "Cache-Control": "no-store" },
   });
 }
