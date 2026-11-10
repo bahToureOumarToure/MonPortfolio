@@ -64,6 +64,10 @@ export async function getAdminEducations() {
   return prisma.education.findMany({ orderBy: { order: "asc" } });
 }
 
+export async function getAdminActivities() {
+  return prisma.activity.findMany({ orderBy: { order: "asc" } });
+}
+
 export async function getRecentActivity(take = 8) {
   return prisma.auditLog.findMany({ orderBy: { createdAt: "desc" }, take });
 }

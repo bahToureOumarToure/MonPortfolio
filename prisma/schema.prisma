@@ -214,6 +214,22 @@ model Education {
   @@index([order])
 }
 
+// Activités extra-universitaires : bénévolat, associations, clubs, événements.
+// Table créée par prisma/sql/011. Vide = la rubrique n'apparaît pas sur le site.
+model Activity {
+  id           String   @id @default(cuid())
+  title        String // rôle ou activité (ex. "Bénévole", "Membre du club IA")
+  organization String   @default("") // association, club, événement
+  duration     String   @default("")
+  details      String[] @default([])
+  order        Int      @default(0)
+  active       Boolean  @default(true)
+  // Traductions { fr: {…}, es: {…}, ar: {…} } ; les colonnes = anglais (défaut)
+  translations Json?
+
+  @@index([order])
+}
+
 // =====================================================================
 // Authentification (Auth.js v5 + adaptateur Prisma + WebAuthn/passkey)
 // + champs propres à l'admin unique (mot de passe + TOTP).

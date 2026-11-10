@@ -60,4 +60,14 @@ export const educationInput = z.object({
 });
 export type EducationInput = z.infer<typeof educationInput>;
 
+export const activityInput = z.object({
+  title: z.string().trim().min(1, "Le titre est requis.").max(200),
+  organization: z.string().trim().max(200).default(""),
+  duration: z.string().trim().max(120).default(""),
+  details: z.array(z.string().trim().max(500)).max(20).default([]),
+  active: z.boolean().default(true),
+  translations: z.unknown().optional(),
+});
+export type ActivityInput = z.infer<typeof activityInput>;
+
 export const idList = z.array(z.string().min(1).max(64)).max(500);

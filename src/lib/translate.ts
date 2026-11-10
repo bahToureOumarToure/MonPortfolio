@@ -23,6 +23,7 @@ export const TRANSLATABLE = {
   project: ["name", "description", "role", "highlights", "challenges"],
   experience: ["title", "company", "duration", "details"],
   education: ["title", "institution", "duration"],
+  activity: ["title", "organization", "duration", "details"],
   skill: ["name"],
 } as const;
 

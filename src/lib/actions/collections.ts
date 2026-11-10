@@ -5,6 +5,7 @@ import {
   socialInput,
   experienceInput,
   educationInput,
+  activityInput,
   idList,
 } from "@/lib/validation/collections";
 import { TRANSLATABLE } from "@/lib/translate";
@@ -17,7 +18,12 @@ import {
 } from "./common";
 import type { ActionResult } from "./result";
 
-type OrderedModel = "skill" | "socialLink" | "experience" | "education";
+type OrderedModel =
+  | "skill"
+  | "socialLink"
+  | "experience"
+  | "education"
+  | "activity";
 
 /** Prochain rang disponible (les nouveaux éléments s'ajoutent en fin de liste). */
 async function nextOrder(model: OrderedModel): Promise<number> {
@@ -28,7 +34,9 @@ async function nextOrder(model: OrderedModel): Promise<number> {
         ? await prisma.socialLink.aggregate({ _max: { order: true } })
         : model === "experience"
           ? await prisma.experience.aggregate({ _max: { order: true } })
-          : await prisma.education.aggregate({ _max: { order: true } });
+          : model === "education"
+            ? await prisma.education.aggregate({ _max: { order: true } })
+            : await prisma.activity.aggregate({ _max: { order: true } });
   return (agg._max.order ?? -1) + 1;
 }
 
@@ -43,7 +51,9 @@ async function applyOrder(model: OrderedModel, ids: string[]) {
           ? prisma.socialLink.update({ where: { id }, data: { order } })
           : model === "experience"
             ? prisma.experience.update({ where: { id }, data: { order } })
-            : prisma.education.update({ where: { id }, data: { order } }),
+            : model === "education"
+              ? prisma.education.update({ where: { id }, data: { order } })
+              : prisma.activity.update({ where: { id }, data: { order } }),
     ),
   );
 }
@@ -296,6 +306,71 @@ export async function reorderEducations(ids: string[]): Promise<ActionResult> {
     await assertAdmin();
     await applyOrder("education", ids);
     await revalidateContent(["educations"], ["/"]);
+    return undefined;
+  });
+}
+
+// --------------------------- Activités extra-universitaires ---------------------------
+export async function createActivity(input: unknown): Promise<ActionResult> {
+  return run(async () => {
+    await assertAdmin();
+    const d = activityInput.parse(input);
+    const a = await prisma.activity.create({
+      data: {
+        title: d.title,
+        organization: d.organization,
+        duration: d.duration,
+        details: d.details.filter(Boolean),
+        active: d.active,
+        ...translationsData(d.translations, TRANSLATABLE.activity),
+        order: await nextOrder("activity"),
+      },
+    });
+    await audit("activity.create", "Activity", a.id);
+    await revalidateContent(["activities"], ["/"]);
+    return undefined;
+  });
+}
+
+export async function updateActivity(
+  id: string,
+  input: unknown,
+): Promise<ActionResult> {
+  return run(async () => {
+    await assertAdmin();
+    const d = activityInput.parse(input);
+    await prisma.activity.update({
+      where: { id },
+      data: {
+        title: d.title,
+        organization: d.organization,
+        duration: d.duration,
+        details: d.details.filter(Boolean),
+        active: d.active,
+        ...translationsData(d.translations, TRANSLATABLE.activity),
+      },
+    });
+    await audit("activity.update", "Activity", id);
+    await revalidateContent(["activities"], ["/"]);
+    return undefined;
+  });
+}
+
+export async function deleteActivity(id: string): Promise<ActionResult> {
+  return run(async () => {
+    await assertAdmin();
+    await prisma.activity.delete({ where: { id } });
+    await audit("activity.delete", "Activity", id);
+    await revalidateContent(["activities"], ["/"]);
+    return undefined;
+  });
+}
+
+export async function reorderActivities(ids: string[]): Promise<ActionResult> {
+  return run(async () => {
+    await assertAdmin();
+    await applyOrder("activity", ids);
+    await revalidateContent(["activities"], ["/"]);
     return undefined;
   });
 }

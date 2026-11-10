@@ -79,6 +79,59 @@ test.describe("Admin", () => {
     await expect(page.getByText("Compétence supprimée.")).toBeVisible();
   });
 
+  test("activités : ajout avec traduction, affichage par langue, suppression", async ({
+    page,
+    browser,
+  }) => {
+    const visitor = await browser.newPage();
+    // Sans activité, la rubrique n'apparaît pas sur le site.
+    await visitor.goto("/");
+    await expect(visitor.locator("#activities")).toHaveCount(0);
+
+    await login(page);
+    await page.goto("/admin/activities");
+    const stamp = Date.now();
+    const title = `Volunteer E2E ${stamp}`;
+    const french = `Bénévole E2E ${stamp}`;
+    await page.locator("#t-title").fill(title);
+    await page.locator("#t-sub").fill("Student association");
+    await page.locator("#t-dur").fill("2024 – 2025");
+    await page.locator("#t-details").fill("Organised a hackathon");
+    await page.locator("#timeline-organization-tr-fr-title").fill(french);
+    await page
+      .locator("#timeline-form")
+      .getByRole("button", { name: "Ajouter" })
+      .click();
+    await expect(page.getByText("Activité ajoutée.")).toBeVisible();
+
+    await visitor.goto("/");
+    const section = visitor.locator("#activities");
+    await expect(
+      section.getByRole("heading", { name: "Extracurricular activities" }),
+    ).toBeVisible();
+    await expect(section.getByText(title)).toBeVisible();
+    await expect(section.getByText("Organised a hackathon")).toBeVisible();
+
+    // En français : titre traduit, le reste retombe sur le texte de base.
+    await visitor.goto("/fr");
+    await expect(
+      visitor
+        .locator("#activities")
+        .getByRole("heading", { name: "Activités extra-universitaires" }),
+    ).toBeVisible();
+    await expect(
+      visitor.locator("#activities").getByText(french),
+    ).toBeVisible();
+
+    const row = page.locator("li", { hasText: title });
+    page.once("dialog", (d) => d.accept());
+    await row.getByRole("button", { name: "Supprimer" }).click();
+    await expect(page.getByText("Supprimé.")).toBeVisible();
+    await visitor.goto("/");
+    await expect(visitor.locator("#activities")).toHaveCount(0);
+    await visitor.close();
+  });
+
   test("paramètres : erreur de validation lisible", async ({ page }) => {
     await login(page);
     await page.goto("/admin/settings");

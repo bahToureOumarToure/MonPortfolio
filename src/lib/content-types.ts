@@ -75,6 +75,14 @@ export interface EducationVM {
   duration: string;
 }
 
+export interface ActivityVM {
+  id: string | number;
+  title: string;
+  organization: string;
+  duration: string;
+  details: string[];
+}
+
 export interface ExperienceVM {
   id: string | number;
   title: string;
