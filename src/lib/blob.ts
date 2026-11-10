@@ -1,40 +1,19 @@
 import "server-only";
-import { del, list } from "@vercel/blob";
-import {
-  SERVER_UPLOAD_MAX_BYTES,
-  type StorageMode,
-  type StorageStatus,
-} from "./upload-rules";
+import { del } from "@vercel/blob";
 
 /**
- * Mode de stockage disponible :
+ * Store Vercel Blob relié au projet :
  * - "client" : BLOB_READ_WRITE_TOKEN présent → upload direct navigateur → Blob
  *   (gros fichiers, progression) ;
  * - "server" : store relié par OIDC (BLOB_STORE_ID, sans jeton lecture/écriture)
  *   → upload via une route serveur (≤ 4 Mo) ;
- * - "none"   : aucun stockage relié au projet.
+ * - "none"   : aucun store relié (les fichiers vont dans la base, voir
+ *   src/lib/storage.ts).
  */
-export function blobMode(): StorageMode {
+export function blobMode(): "client" | "server" | "none" {
   if (process.env.BLOB_READ_WRITE_TOKEN) return "client";
   if (process.env.BLOB_STORE_ID) return "server";
   return "none";
-}
-
-/** Vérifie réellement l'accès au store (requête légère). */
-export async function blobStatus(): Promise<StorageStatus> {
-  const mode = blobMode();
-  const base = { mode, serverMaxBytes: SERVER_UPLOAD_MAX_BYTES };
-  if (mode === "none") return { ...base, ok: false, error: null };
-  try {
-    await list({ limit: 1 });
-    return { ...base, ok: true, error: null };
-  } catch (error) {
-    return {
-      ...base,
-      ok: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
 }
 
 export function isBlobUrl(url: string): boolean {

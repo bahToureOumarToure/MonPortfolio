@@ -43,10 +43,14 @@ Paramètres & CV, Sécurité. Chaque modification est en ligne immédiatement.
 (10 teintes prêtes ou couleur libre), arrondis, aperçu en direct. Tout le site et
 l'admin suivent ces réglages.
 
-**Uploads** — diagnostic du stockage dans l'admin, envoi direct (jeton Blob) ou via le
-serveur (store relié par OIDC), ajout d'image par lien, glisser-déposer, envoi multiple avec progression par fichier, validation
-avant envoi, redimensionnement + conversion WebP automatiques des photos lourdes,
-texte alternatif, recherche, « Utiliser pour… » (profil, hero, couverture de projet).
+**Uploads** — fonctionnent sans aucune configuration : sans store Vercel Blob relié
+(ou s'il est en panne, privé, mal configuré), les fichiers sont enregistrés dans la base
+de données du site et servis par `/media/<id>/<nom>` (4 Mo max par fichier, 200 Mo au
+total). Avec un store Blob public relié au projet, les fichiers y vont directement
+(jusqu'à 5 Mo par image, 10 Mo par PDF). Diagnostic du stockage dans l'admin, ajout
+d'image par lien, glisser-déposer, envoi multiple avec progression, validation avant
+envoi, redimensionnement + conversion WebP automatiques des photos lourdes, texte
+alternatif, recherche, « Utiliser pour… » (profil, hero, couverture de projet).
 
 ## Structure
 

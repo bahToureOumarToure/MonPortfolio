@@ -66,8 +66,9 @@ export const config = {
   matcher: [
     "/admin/:path*",
     "/api/admin/:path*",
-    // Pages du site : tout sauf l'API, les fichiers internes de Next/Vercel
-    // et les fichiers statiques (robots.txt, sitemap.xml, images, sw.js…).
-    "/((?!api|admin|_next|_vercel|.*\\..*).*)",
+    // Pages du site : tout sauf l'API, les fichiers envoyés (/media), les
+    // fichiers internes de Next/Vercel et les fichiers statiques (robots.txt,
+    // sitemap.xml, images, sw.js…).
+    "/((?!api|admin|media|_next|_vercel|.*\\..*).*)",
   ],
 };
